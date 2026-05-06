@@ -85,6 +85,8 @@
   --state-success: #34d399;
   --state-warning: #fbbf24;
 
+  --overlay: rgba(0, 0, 0, 0.4);
+
   --radius: 0.75rem;
 }
 

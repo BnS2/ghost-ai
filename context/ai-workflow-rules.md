@@ -36,11 +36,11 @@ This includes:
 - `components/ui/*` (shadcn/ui components)
 - third-party library internals
 
-These should remain default and reusable.
+These should remain default and reusable, and must be excluded from project-specific linting and formatting rules.
 
 Project-specific styling, layout changes, and feature logic must be implemented in app-level components instead of modifying foundation components.
 
-Only modify these files when a task explicitly requires it.
+Only modify these files when a task explicitly requires it. When modification is necessary, preserve the original formatting and coding style of the file.
 
 ## Keeping Docs In Sync
 
