@@ -47,4 +47,14 @@
 - `trigger/` — all durable background tasks and AI workflows.
 - `components/` — UI composition only; no business logic.
 - `app/api/` — route handlers for auth, triggering, and persistence.
-- Name files after the responsibility they contain, not the technology.
+
+## Accessibility
+
+- Prioritize semantic HTML elements (like `button`, `a`, `main`, `aside`) to inherit default accessibility behaviors.
+- Ensure all interactive elements are keyboard-accessible.
+- If a semantic element cannot be used and a non-interactive element (like a `div` or `span`) must have an `onClick` handler, it MUST also include:
+  - Keyboard event handlers (`onKeyDown` or `onKeyUp`) for Enter/Space.
+  - A valid `role` attribute (e.g., `role="button"`).
+  - A `tabIndex={0}` to make it focusable.
+
+
