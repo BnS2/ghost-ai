@@ -5,7 +5,7 @@
     "scss/at-rule-no-unknown": [
       true,
       {
-        "ignoreAtRules": ["custom-variant", "theme", "tailwind", "import", "layer", "apply", "config"]
+        "ignoreAtRules": ["custom-variant", "theme", "source", "utility", "variant", "tailwind", "import", "layer", "apply", "config"]
       }
     ],
     "at-rule-no-unknown": null

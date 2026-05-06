@@ -2,7 +2,11 @@ import { Input as InputPrimitive } from "@base-ui/react/input";
 
 import { cn } from "@/lib/utils";
 
-function Input({ className, type, ...props }: InputPrimitive.Props) {
+function Input({
+	className,
+	type,
+	...props
+}: Omit<InputPrimitive.Props, "className"> & { className?: string }) {
 	return (
 		<InputPrimitive
 			type={type}
