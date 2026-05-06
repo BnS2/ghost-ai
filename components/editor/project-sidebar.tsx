@@ -20,13 +20,16 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
       {isOpen && (
         <button 
           type="button"
-          className="fixed inset-0 bg-black/40 z-40 transition-opacity border-none cursor-pointer" 
+          className="fixed inset-0 bg-overlay z-40 transition-opacity border-none cursor-pointer" 
           onClick={onClose}
           aria-label="Close sidebar"
         />
       )}
 
       <aside
+        id="project-sidebar"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
         className={cn(
           "fixed top-0 left-0 h-full w-80 bg-bg-surface border-r border-border-default z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -34,7 +37,13 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
       >
         <div className="p-4 border-b border-border-subtle flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">Projects</h2>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose} 
+            className="h-8 w-8"
+            aria-label="Close projects"
+          >
             <XIcon className="h-4 w-4 text-text-muted" />
           </Button>
         </div>

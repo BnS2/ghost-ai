@@ -55,6 +55,7 @@
   --color-border: var(--border-default);
   --color-input: var(--border-subtle);
   --color-ring: var(--accent-primary);
+  --color-overlay: var(--overlay);
 
   /* Fonts */
   --font-sans: var(--font-geist-sans);

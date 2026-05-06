@@ -18,6 +18,9 @@ export function EditorNavbar({ isSidebarOpen, onToggleSidebar }: EditorNavbarPro
           onClick={onToggleSidebar}
           className="text-text-secondary hover:text-text-primary"
           id="sidebar-toggle"
+          aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          aria-expanded={isSidebarOpen}
+          aria-controls="project-sidebar"
         >
           {isSidebarOpen ? (
             <PanelLeftCloseIcon className="h-5 w-5" />
