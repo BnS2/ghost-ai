@@ -10,7 +10,7 @@ interface EditorNavbarProps {
 
 export function EditorNavbar({ isSidebarOpen, onToggleSidebar }: EditorNavbarProps) {
   return (
-    <header className="h-14 border-b border-border-subtle bg-bg-base flex items-center justify-between px-4 sticky top-0 z-50">
+    <header className="h-14 border-b border-border-subtle bg-base flex items-center justify-between px-4 sticky top-0 z-50">
       <div className="flex items-center gap-4 flex-1">
         <Button
           variant="ghost"

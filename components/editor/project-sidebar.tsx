@@ -13,14 +13,10 @@ interface ProjectSidebarProps {
 export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
   return (
     <>
-      {/* Backdrop for mobile or just to dim background if needed, 
-          though spec says float above canvas and not push content. 
-          Usually implies an overlay if it's "above" and "doesn't push".
-      */}
       {isOpen && (
         <button 
           type="button"
-          className="fixed inset-0 bg-overlay z-40 transition-opacity border-none cursor-pointer" 
+          className="fixed inset-0 bg-transparent z-40 border-none cursor-pointer" 
           onClick={onClose}
           aria-label="Close sidebar"
         />
@@ -29,51 +25,61 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
       <aside
         id="project-sidebar"
         aria-hidden={!isOpen}
-        inert={!isOpen}
+        inert={!isOpen ? true : undefined}
         className={cn(
-          "fixed top-0 left-0 h-full w-80 bg-bg-surface border-r border-border-default z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
+          "fixed top-0 left-0 h-full w-80 bg-surface border-r border-border-subtle z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="p-4 border-b border-border-subtle flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-text-primary">Projects</h2>
+        <div className="px-6 py-5 flex items-center justify-between border-b border-border-subtle/50">
+          <h2 className="text-xl font-medium text-text-primary tracking-tight">Projects</h2>
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onClose} 
-            className="h-8 w-8"
-            aria-label="Close projects"
+            className="h-8 w-8 hover:bg-white/5 rounded-full transition-colors"
+            aria-label="Close sidebar"
           >
-            <XIcon className="h-4 w-4 text-text-muted" />
+            <XIcon className="h-5 w-5 text-text-muted" />
           </Button>
         </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <Tabs defaultValue="my-projects" className="flex-1 flex flex-col p-4 gap-4">
-            <TabsList className="w-full justify-start bg-bg-base p-1 h-10 border border-border-subtle">
-              <TabsTrigger value="my-projects" className="flex-1 data-active:bg-bg-subtle data-active:text-text-primary">My Projects</TabsTrigger>
-              <TabsTrigger value="shared" className="flex-1 data-active:bg-bg-subtle data-active:text-text-primary">Shared</TabsTrigger>
-            </TabsList>
+        <div className="px-6 pt-6 flex-1 flex flex-col min-h-0">
+          <Tabs defaultValue="my-projects" className="flex-1 flex flex-col">
+            <div className="bg-elevated p-1 rounded-full mb-6">
+              <TabsList className="w-full bg-transparent p-0 h-9 border-none flex">
+                <TabsTrigger 
+                  value="my-projects" 
+                  className="flex-1 rounded-full text-sm font-semibold transition-all data-active:bg-base dark:data-active:bg-base data-active:text-text-primary dark:data-active:text-text-primary data-active:shadow-none data-active:border-transparent text-text-muted hover:text-text-secondary"
+                >
+                  My Projects
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="shared" 
+                  className="flex-1 rounded-full text-sm font-semibold transition-all data-active:bg-base dark:data-active:bg-base data-active:text-text-primary dark:data-active:text-text-primary data-active:shadow-none data-active:border-transparent text-text-muted hover:text-text-secondary"
+                >
+                  Shared
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="my-projects" className="flex-1 mt-0">
-              <div className="h-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border-subtle rounded-xl">
-                <p className="text-sm text-text-muted">No projects yet</p>
-                <p className="text-xs text-text-faint mt-1">Create your first project to get started</p>
+            <TabsContent value="my-projects" className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-[15px] text-text-muted font-normal tracking-wide">No projects yet.</p>
               </div>
             </TabsContent>
 
-            <TabsContent value="shared" className="flex-1 mt-0">
-              <div className="h-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border-subtle rounded-xl">
-                <p className="text-sm text-text-muted">No shared projects</p>
-                <p className="text-xs text-text-faint mt-1">Projects shared with you will appear here</p>
+            <TabsContent value="shared" className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-[15px] text-text-muted font-normal tracking-wide">No shared projects.</p>
               </div>
             </TabsContent>
           </Tabs>
         </div>
 
-        <div className="p-4 border-t border-border-subtle">
-          <Button className="w-full bg-accent-primary hover:bg-accent-primary/90 text-bg-base font-semibold gap-2 rounded-xl h-11">
-            <PlusIcon className="h-4 w-4" />
+        <div className="p-6 mt-auto flex items-center gap-3 border-t border-border-subtle/50">
+          <Button className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-black font-bold gap-2 rounded-xl h-12 border-none shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <PlusIcon className="h-4 w-4" strokeWidth={3.5} />
             New Project
           </Button>
         </div>
