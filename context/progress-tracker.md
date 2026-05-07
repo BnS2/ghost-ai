@@ -14,12 +14,13 @@ Update this file whenever the current phase, active feature, or implementation s
 - Design System implementation (shadcn/ui, lucide-react, base utilities, custom tokens).
 - Editor Chrome implementation (Navbar, Sidebar, Layout state).
 - Authentication implementation (Clerk integration, proxy-based route protection, themed auth pages).
+- Editor Home and Project Dialogs (feature-specs/04-project-dialogs.md).
 
 ## In Progress
-- None.
+- Canvas foundation and node-based editing.
 
 ## Next Up
-- Canvas foundation and node-based editing.
+- Node-based editing implementation.
 
 
 ## Open Questions
@@ -32,4 +33,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Session Notes
 
-- Add context needed to resume work in the next session.
+- Completed Editor Home and Project Dialogs implementation.
+- Wired sidebar actions (Rename, Delete) and New Project button.
+- Implemented slug preview logic in Create Project dialog.
+- Verified accessibility (backdropScrim, ARIA labels, focus management).
+- Refactored ProjectDialogs to use sub-components and keys for state reset, avoiding synchronous setState in effects.
+- Fixed accessibility violations in ProjectSidebar (interactive static elements, missing keyboard handlers).
+- Audited all shadcn/ui components (Button, Card, Dialog, Input, Textarea, Tabs, ScrollArea) against ui-context.md. Replaced shadcn alias tokens with direct design system tokens and removed unnecessary dark: variants.
+- Next session should focus on the Canvas foundation and React Flow integration.
