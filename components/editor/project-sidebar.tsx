@@ -38,7 +38,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
             size="icon" 
             onClick={onClose} 
             className="h-8 w-8 hover:bg-white/5 rounded-full transition-colors"
-            aria-label="Close projects"
+            aria-label="Close sidebar"
           >
             <XIcon className="h-5 w-5 text-text-muted" />
           </Button>
@@ -50,26 +50,26 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
               <TabsList className="w-full bg-transparent p-0 h-9 border-none flex">
                 <TabsTrigger 
                   value="my-projects" 
-                  className="flex-1 rounded-full text-sm font-semibold transition-all data-active:bg-base dark:data-active:bg-base! data-active:text-text-primary! dark:data-active:text-text-primary! data-active:shadow-none! data-active:border-transparent! text-text-muted hover:text-text-secondary ring-0 focus-visible:ring-0"
+                  className="flex-1 rounded-full text-sm font-semibold transition-all data-active:bg-base dark:data-active:bg-base data-active:text-text-primary dark:data-active:text-text-primary data-active:shadow-none data-active:border-transparent text-text-muted hover:text-text-secondary"
                 >
                   My Projects
                 </TabsTrigger>
                 <TabsTrigger 
                   value="shared" 
-                  className="flex-1 rounded-full text-sm font-semibold transition-all data-active:bg-base dark:data-active:bg-base! data-active:text-text-primary! dark:data-active:text-text-primary! data-active:shadow-none! data-active:border-transparent! text-text-muted hover:text-text-secondary ring-0 focus-visible:ring-0"
+                  className="flex-1 rounded-full text-sm font-semibold transition-all data-active:bg-base dark:data-active:bg-base data-active:text-text-primary dark:data-active:text-text-primary data-active:shadow-none data-active:border-transparent text-text-muted hover:text-text-secondary"
                 >
                   Shared
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="my-projects" className="flex-1 flex items-center justify-center -mt-20">
+            <TabsContent value="my-projects" className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-[15px] text-text-muted font-normal tracking-wide">No projects yet.</p>
               </div>
             </TabsContent>
 
-            <TabsContent value="shared" className="flex-1 flex items-center justify-center -mt-20">
+            <TabsContent value="shared" className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-[15px] text-text-muted font-normal tracking-wide">No shared projects.</p>
               </div>
