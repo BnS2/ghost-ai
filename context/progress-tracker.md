@@ -7,17 +7,16 @@ Update this file whenever the current phase, active feature, or implementation s
 - Phase 1: Foundation
 
 ## Current Goal
-- Implement the base editor chrome including the navbar and project sidebar as specified in context/feature-specs/02-editor.md.
+- Canvas foundation and node-based editing.
 
 ## Completed
 - Project context and architecture definition.
 - Design System implementation (shadcn/ui, lucide-react, base utilities, custom tokens).
 - Editor Chrome implementation (Navbar, Sidebar, Layout state).
+- Authentication implementation (Clerk integration, proxy-based route protection, themed auth pages).
 
 ## In Progress
 - None.
-
-
 
 ## Next Up
 - Canvas foundation and node-based editing.
