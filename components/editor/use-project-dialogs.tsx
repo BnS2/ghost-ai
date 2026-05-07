@@ -65,8 +65,17 @@ export function useProjectDialogs(): UseProjectDialogsReturn {
 }
 
 export function generateSlug(name: string): string {
-	return name
+	const slug = name
+		.normalize("NFKD")
+		.replace(/\p{Diacritic}/gu, "")
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-+|-+$/g, "");
+
+	if (slug) return slug;
+
+	// Fallback for purely non-Latin names (e.g. CJK): hex codepoints
+	return Array.from(name)
+		.map((c) => (c.codePointAt(0) ?? 0).toString(16))
+		.join("-");
 }

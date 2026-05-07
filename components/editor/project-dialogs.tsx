@@ -143,12 +143,14 @@ function RenameDialogContent({
 	}, []);
 
 	const handleSubmit = () => {
+		if (!name.trim()) return;
 		console.log("Submit: rename", { name });
 		onClose();
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
+		if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+		if (e.key === "Enter" && name.trim()) {
 			handleSubmit();
 		}
 	};

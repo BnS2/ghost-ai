@@ -1,6 +1,6 @@
 ## Goal
 
-Buld the `/editor` home screen and add project dialogs/sidebar actions. No API calls or persistence yet.
+Build the `/editor` home screen and add project dialogs/sidebar actions. No API calls or persistence yet.
 
 ## Editor Home
 
@@ -55,7 +55,7 @@ On mobile:
 
 ### Implementation
 
-Create a dedicatged hook to manage:
+Create a dedicated hook to manage:
 
 - dialog state
 - form state
