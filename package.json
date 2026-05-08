@@ -16,9 +16,12 @@
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json}": [
+    "*.{ts,tsx,js,jsx}": [
       "biome check --write --no-errors-on-unmatched",
       "eslint --fix"
+    ],
+    "*.json": [
+      "biome check --write --no-errors-on-unmatched"
     ]
   },
   "dependencies": {
