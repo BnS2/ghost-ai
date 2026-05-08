@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-and-format:
-    name: Biome Check
+    name: Lint and Format
     runs-on: ubuntu-latest
 
     steps:
@@ -26,3 +26,6 @@ jobs:
 
       - name: Run Biome CI
         run: npx biome ci .
+
+      - name: Run ESLint
+        run: npm run lint
