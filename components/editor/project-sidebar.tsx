@@ -16,6 +16,7 @@ interface ProjectSidebarProps {
   onRenameProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
   activeProjectId?: string;
+  variant?: "floating" | "persistent";
 }
 
 function ProjectItem({
@@ -37,7 +38,9 @@ function ProjectItem({
       <div
         className={cn(
           "flex items-center gap-1 rounded-lg transition-colors group/item",
-          isActive ? "bg-accent/10 border border-accent/20" : "hover:bg-white/5",
+          isActive
+            ? "bg-accent-primary/10 border border-accent-primary/30"
+            : "hover:bg-white/5 border border-transparent",
         )}
       >
         <button
@@ -45,7 +48,14 @@ function ProjectItem({
           className="flex-1 min-w-0 p-3 text-left focus-visible:outline-2 focus-visible:outline-accent-primary focus-visible:outline-offset-2 rounded-lg"
           onClick={() => router.push(`/editor/${project.id}`)}
         >
-          <p className="text-sm font-medium text-text-primary truncate">{project.name}</p>
+          <p
+            className={cn(
+              "text-sm font-medium truncate",
+              isActive ? "text-accent-primary" : "text-text-primary",
+            )}
+          >
+            {project.name}
+          </p>
           <p className="text-xs text-text-muted font-mono truncate">{project.slug}</p>
         </button>
 
@@ -114,13 +124,18 @@ export function ProjectSidebar({
   onRenameProject,
   onDeleteProject,
   activeProjectId,
+  variant = "floating",
 }: ProjectSidebarProps) {
   const ownedProjects = projects.filter((p) => p.isOwned);
   const sharedProjects = projects.filter((p) => !p.isOwned);
 
+  const isActiveOwned = ownedProjects.some((p) => p.id === activeProjectId);
+  const isActiveShared = sharedProjects.some((p) => p.id === activeProjectId);
+  const defaultTab = isActiveShared ? "shared" : "my-projects";
+
   return (
     <>
-      {isOpen && (
+      {variant === "floating" && isOpen && (
         <button
           type="button"
           className="fixed inset-0 bg-overlay backdrop-blur-sm z-40 border-none cursor-pointer"
@@ -134,8 +149,13 @@ export function ProjectSidebar({
         aria-hidden={!isOpen}
         inert={!isOpen ? true : undefined}
         className={cn(
-          "fixed top-0 left-0 h-full w-80 bg-surface border-r border-border-subtle z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          "bg-surface border-r border-border-subtle z-50 transform transition-all duration-300 ease-in-out flex flex-col shrink-0",
+          variant === "floating" ? "fixed top-0 left-0 h-full w-80 shadow-2xl" : "relative h-full",
+          isOpen
+            ? "translate-x-0 opacity-100 w-80"
+            : variant === "floating"
+              ? "-translate-x-full opacity-0 w-80"
+              : "-translate-x-4 opacity-0 w-0 border-none overflow-hidden",
         )}
       >
         <div className="px-6 py-5 flex items-center justify-between border-b border-border-subtle/50">
@@ -152,7 +172,7 @@ export function ProjectSidebar({
         </div>
 
         <div className="px-6 pt-6 flex-1 flex flex-col min-h-0 overflow-hidden">
-          <Tabs defaultValue="my-projects" className="flex-1 flex flex-col">
+          <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col">
             <div className="bg-elevated p-1 rounded-full mb-6">
               <TabsList className="w-full bg-transparent p-0 h-9 border-none flex">
                 <TabsTrigger
