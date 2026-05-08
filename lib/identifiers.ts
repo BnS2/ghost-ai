@@ -16,8 +16,8 @@ const SLUG_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
  * @param length Number of characters (default 4 → 36⁴ ≈ 1.68 M combinations).
  */
 export function generateSuffix(length = 4): string {
-	const values = crypto.getRandomValues(new Uint8Array(length));
-	return Array.from(values, (v) => SLUG_ALPHABET[v % SLUG_ALPHABET.length]).join("");
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(values, (v) => SLUG_ALPHABET[v % SLUG_ALPHABET.length]).join("");
 }
 
 /**
@@ -29,17 +29,17 @@ export function generateSuffix(length = 4): string {
  * 4. Fallback: hex-encode codepoints for purely non-Latin names (CJK, emoji, etc.).
  */
 export function generateSlug(name: string): string {
-	const slug = name
-		.normalize("NFKD")
-		.replace(/\p{Diacritic}/gu, "")
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "");
+  const slug = name
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-	if (slug) return slug;
+  if (slug) return slug;
 
-	// Fallback for purely non-Latin names (e.g. CJK): hex codepoints
-	return Array.from(name)
-		.map((c) => (c.codePointAt(0) ?? 0).toString(16))
-		.join("-");
+  // Fallback for purely non-Latin names (e.g. CJK): hex codepoints
+  return Array.from(name)
+    .map((c) => (c.codePointAt(0) ?? 0).toString(16))
+    .join("-");
 }

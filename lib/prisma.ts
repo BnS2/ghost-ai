@@ -11,19 +11,17 @@ const connectionString = ENV.DATABASE_URL || "";
 // - if it starts with prisma+posgres://, use Accelerate
 // - otherwise use direct @prisma/adapter-pg
 const isAccelerate =
-	connectionString.startsWith("prisma+posgres://") ||
-	connectionString.startsWith("prisma+postgres://") ||
-	connectionString.startsWith("prisma://");
+  connectionString.startsWith("prisma+posgres://") ||
+  connectionString.startsWith("prisma+postgres://") ||
+  connectionString.startsWith("prisma://");
 
 const createPrismaClient = () => {
-	if (isAccelerate) {
-		return new PrismaClient({ accelerateUrl: connectionString }).$extends(
-			withAccelerate(),
-		);
-	} else {
-		const adapter = new PrismaPg({ connectionString });
-		return new PrismaClient({ adapter });
-	}
+  if (isAccelerate) {
+    return new PrismaClient({ accelerateUrl: connectionString }).$extends(withAccelerate());
+  } else {
+    const adapter = new PrismaPg({ connectionString });
+    return new PrismaClient({ adapter });
+  }
 };
 
 // Define a stable type for the database client to avoid union compatibility issues.
@@ -32,7 +30,7 @@ const createPrismaClient = () => {
 type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>;
 
 const globalForPrisma = global as unknown as {
-	prisma: ExtendedPrismaClient | undefined;
+  prisma: ExtendedPrismaClient | undefined;
 };
 
 // Export the singleton. We use the ExtendedPrismaClient type to preserve
@@ -40,5 +38,5 @@ const globalForPrisma = global as unknown as {
 export const db = globalForPrisma.prisma ?? createPrismaClient();
 
 if (ENV.NODE_ENV !== "production") {
-	globalForPrisma.prisma = db;
+  globalForPrisma.prisma = db;
 }
