@@ -18,23 +18,18 @@ Update this file whenever the current phase, active feature, or implementation s
 - Prisma setup and data models (feature-specs/05-prisma-specs.md). Implemented models, client singleton with driver adapter branching, and integrated varlock for env management. Migration `init` applied successfully.
 - Project API Implementation (feature-specs/06-project-apis.md). Implemented list, create, rename, and delete endpoints with Clerk authentication and ownership checks.
 - Wire the editor home sidebar and dialogs to the real project API (feature-specs/07-wire-editor-home.md). Wired mutations, server-side fetching, and workspace navigation.
-
+- Editor Workspace Shell (feature-specs/08-editor-workspace-shell.md). Implemented layout, access checks, and active project highlighting.
 
 ## In Progress
 - Canvas foundation and node-based editing.
 
-
-
 ## Open Questions
-
 - Add unresolved product or implementation questions here.
 
 ## Architecture Decisions
-
 - Add decisions that affect the system design or data model.
 
 ## Session Notes
-
 - Completed Editor Home and Project Dialogs implementation.
 - Wired sidebar actions (Rename, Delete) and New Project button.
 - Implemented slug preview logic in Create Project dialog.
@@ -61,3 +56,16 @@ Update this file whenever the current phase, active feature, or implementation s
     - Switched to functional state updaters for sidebar toggle logic.
     - Improved suffix handling with nullish coalescing and `useMemo` for stability and React purity.
 - Set up pre-commit hook pipeline: installed `@biomejs/biome`, `simple-git-hooks`, and `lint-staged` as devDependencies. Configured `biome.json` with project-tuned formatter/linter rules. Wired `simple-git-hooks` → `lint-staged` → `biome check --write` for staged `.ts/.tsx/.js/.jsx/.json` files. Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) running `biome ci` on push/PR to main.
+- Implemented Editor Workspace Shell (08-editor-workspace-shell.md):
+    - Created `lib/project-access.ts` for centralized identity and access management.
+    - Created `components/editor/access-denied.tsx` for unauthorized or non-existent projects.
+    - Updated `EditorNavbar` with project name display and share/AI actions.
+    - Updated `ProjectSidebar` to support active project highlighting.
+    - Refactored `app/editor/[projectId]` to use Server Component access checks and the full-viewport shell layout.
+    - Wired AI sidebar toggle in `EditorNavbar` and `WorkspaceView` with smooth transitions.
+    - Refactored `ProjectSidebar` and `WorkspaceView` to support a persistent layout where sidebars push the canvas content rather than overlapping it, fulfilling the "fill remaining space" requirement.
+    - Polished `EditorNavbar` UI: Updated "Ghost AI" branding with high-contrast link and implemented premium "pill" styled Share and AI buttons based on reference design.
+- Hardened Clerk authentication resilience:
+    - Created `lib/clerk-utils.ts` with a `currentUserWithRetry` helper to handle transient "fetch failed" network errors from Clerk's API.
+    - Updated `lib/project-access.ts` (`getIdentity`) to use the resilient fetcher and handle error cases by falling back to `email: undefined` instead of crashing the page.
+    - Updated `lib/projects.ts` (`getProjects`) to use the robust `getIdentity` helper, ensuring the editor workspace remains accessible even if user details fetch partially fails.
