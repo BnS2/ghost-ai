@@ -12,7 +12,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { generateSlug, type Project } from "./use-project-dialogs";
+import { generateSlug, generateSuffix } from "@/lib/identifiers";
+import type { Project } from "./use-project-dialogs";
 
 interface ProjectDialogsProps {
 	open: boolean;
@@ -20,7 +21,7 @@ interface ProjectDialogsProps {
 	selectedProject: Project | null;
 	isLoading?: boolean;
 	onClose: () => void;
-	onCreate?: (name: string) => void;
+	onCreate?: (name: string, suffix: string) => void;
 	onRename?: (projectId: string, name: string) => void;
 	onDelete?: (projectId: string) => void;
 }
@@ -89,11 +90,12 @@ function CreateDialogContent({
 	isLoading,
 }: {
 	onClose: () => void;
-	onCreate?: (name: string) => void;
+	onCreate?: (name: string, suffix: string) => void;
 	isLoading?: boolean;
 }) {
 	const [name, setName] = useState("");
 	const [slug, setSlug] = useState("");
+	const [suffix] = useState(() => generateSuffix());
 
 	const handleNameChange = (value: string) => {
 		setName(value);
@@ -101,7 +103,7 @@ function CreateDialogContent({
 	};
 
 	const handleSubmit = () => {
-		onCreate?.(name);
+		onCreate?.(name, suffix);
 	};
 
 	return (
@@ -131,12 +133,9 @@ function CreateDialogContent({
 				</div>
 				{slug && (
 					<div className="flex flex-col gap-1.5">
-						<p className="text-[11px] font-bold text-muted uppercase tracking-wider">
-							Room ID Preview
-						</p>
 						<div className="flex items-center gap-2 text-sm text-text-muted">
 							<code className="px-2 py-1 bg-elevated rounded-md font-mono text-accent-primary">
-								{slug}-[xxxx]
+								{slug}-{suffix}
 							</code>
 						</div>
 					</div>

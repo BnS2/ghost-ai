@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import {
-	generateSlug,
-	type DialogType,
-	type Project,
+import { useCallback, useState } from "react";
+import type {
+	DialogType,
+	Project,
 } from "@/components/editor/use-project-dialogs";
+import { generateSlug, generateSuffix } from "@/lib/identifiers";
 
 export function useProjectActions() {
 	const [dialogType, setDialogType] = useState<DialogType>(null);
@@ -36,13 +36,13 @@ export function useProjectActions() {
 		setIsLoading(false);
 	}, []);
 
-	const handleCreate = async (name: string) => {
+	const handleCreate = async (name: string, suffix?: string) => {
 		if (!name.trim()) return;
 		setIsLoading(true);
 		try {
-			// Generate a short unique suffix
-			const suffix = Math.random().toString(36).substring(2, 6);
-			const slug = `${generateSlug(name)}-${suffix}`;
+			// Use provided suffix or generate a new one
+			const finalSuffix = suffix ?? generateSuffix();
+			const slug = `${generateSlug(name)}-${finalSuffix}`;
 
 			const response = await fetch("/api/projects", {
 				method: "POST",
