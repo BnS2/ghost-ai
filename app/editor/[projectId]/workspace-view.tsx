@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
@@ -28,33 +28,77 @@ export function WorkspaceView({ project, ownedProjects, sharedProjects }: Worksp
     handleDelete,
   } = useProjectActions();
 
-  const allProjects = [...ownedProjects, ...sharedProjects];
+  const allProjects = useMemo(
+    () => [...ownedProjects, ...sharedProjects],
+    [ownedProjects, sharedProjects],
+  );
 
   return (
-    <div className="relative min-h-screen bg-bg-base flex flex-col font-sans">
+    <div className="h-screen bg-canvas-bg flex flex-col font-sans overflow-hidden">
       <EditorNavbar
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        projectName={project.name}
       />
 
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-text-primary">Workspace: {project.name}</h1>
-          <p className="text-text-secondary font-mono text-sm">{project.id}</p>
-          <div className="p-8 border-2 border-dashed border-border-subtle rounded-3xl opacity-20">
-            Canvas placeholder
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left Sidebar Overlay (handled by ProjectSidebar component) */}
+        <ProjectSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          projects={allProjects}
+          onCreateProject={openCreateDialog}
+          onRenameProject={openRenameDialog}
+          onDeleteProject={openDeleteDialog}
+          activeProjectId={project.id}
+        />
+
+        {/* Central Canvas Area */}
+        <main className="flex-1 relative bg-canvas-bg overflow-hidden flex flex-col">
+          <div className="flex-1 flex items-center justify-center relative">
+            {/* Grid Pattern Placeholder */}
+            <div
+              className="absolute inset-0 opacity-[0.03] pointer-events-none"
+              style={{
+                backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
+              }}
+            />
+
+            <div className="z-10 text-center space-y-6 max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center mx-auto border border-accent/20">
+                <div className="w-8 h-8 bg-accent rounded-full animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold text-text-primary tracking-tight">
+                  Canvas Ready
+                </h2>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  The workspace is initialized. Interactive node-based editing and Liveblocks
+                  collaboration will be implemented in the next phase.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      <ProjectSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        projects={allProjects}
-        onCreateProject={openCreateDialog}
-        onRenameProject={openRenameDialog}
-        onDeleteProject={openDeleteDialog}
-      />
+        {/* Right Sidebar Placeholder (AI Chat) */}
+        <aside className="w-[350px] border-l border-border-subtle bg-surface hidden xl:flex flex-col">
+          <div className="p-4 border-b border-border-subtle flex items-center gap-2">
+            <div className="w-2 h-2 bg-accent rounded-full" />
+            <span className="text-sm font-semibold text-text-primary">AI Assistant</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-text-muted">
+              AI capabilities coming soon
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              In the future, you&apos;ll be able to chat with an AI to help build and refine your
+              canvas nodes.
+            </p>
+          </div>
+        </aside>
+      </div>
 
       <ProjectDialogs
         open={dialogType !== null}

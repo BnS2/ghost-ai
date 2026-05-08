@@ -1,6 +1,6 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db, type PrismaClient } from "@/lib/prisma";
+import { AccessDenied } from "@/components/editor/access-denied";
+import { checkProjectAccess, getIdentity } from "@/lib/project-access";
 import { getProjects } from "@/lib/projects";
 import { WorkspaceView } from "./workspace-view";
 
@@ -9,27 +9,17 @@ export default async function WorkspacePage({
 }: {
   params: Promise<{ projectId: string }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const user = await currentUser();
-  const email = user?.emailAddresses[0]?.emailAddress;
+  const identity = await getIdentity();
+  if (!identity) redirect("/sign-in");
 
   const { projectId } = await params;
+  const project = await checkProjectAccess(projectId);
 
-  // Fetch both the current project and the list of projects for the sidebar
-  const projectDb = db as PrismaClient;
-  const [project, { owned, shared }] = await Promise.all([
-    projectDb.project.findFirst({
-      where: {
-        id: projectId,
-        OR: [{ ownerId: userId }, ...(email ? [{ collaborators: { some: { email } } }] : [])],
-      },
-    }),
-    getProjects(),
-  ]);
+  if (!project) {
+    return <AccessDenied />;
+  }
 
-  if (!project) redirect("/editor");
+  const { owned, shared } = await getProjects();
 
   return <WorkspaceView project={project} ownedProjects={owned} sharedProjects={shared} />;
 }
