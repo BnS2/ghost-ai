@@ -1,12 +1,9 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+import { withAccelerate } from "@prisma/extension-accelerate";
+import { ENV } from "varlock/env";
 import { PrismaClient } from "../app/generated/prisma";
 
-const globalForPrisma = global as unknown as {
-	prisma: PrismaClient | undefined;
-};
-
-const connectionString = process.env.DATABASE_URL || "";
+const connectionString = ENV.DATABASE_URL || "";
 
 // According to 05-prisma-specs.md:
 // - if it starts with prisma+posgres://, use Accelerate
@@ -18,16 +15,23 @@ const isAccelerate =
 
 const createPrismaClient = () => {
 	if (isAccelerate) {
-		return new PrismaClient();
+		return new PrismaClient({ accelerateUrl: connectionString }).$extends(
+			withAccelerate(),
+		);
 	} else {
-		const pool = new pg.Pool({ connectionString });
-		const adapter = new PrismaPg(pool);
+		const adapter = new PrismaPg({ connectionString });
 		return new PrismaClient({ adapter });
 	}
 };
 
+type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>;
+
+const globalForPrisma = global as unknown as {
+	prisma: ExtendedPrismaClient | undefined;
+};
+
 export const db = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") {
-	globalForPrisma.prisma = db;
+if (ENV.NODE_ENV !== "production") {
+	globalForPrisma.prisma = db as ExtendedPrismaClient;
 }

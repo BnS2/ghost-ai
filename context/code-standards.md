@@ -58,3 +58,8 @@
   - A `tabIndex={0}` to make it focusable.
 
 
+## Environment Variables
+
+- Do not use `process.env` directly in the application code.
+- Use the typed `ENV` object from `varlock/env` for all environment variable access.
+- All environment variables must be defined in `.env.schema` for validation.

@@ -41,3 +41,6 @@ Update this file whenever the current phase, active feature, or implementation s
 - Fixed accessibility violations in ProjectSidebar (interactive static elements, missing keyboard handlers).
 - Audited all shadcn/ui components (Button, Card, Dialog, Input, Textarea, Tabs, ScrollArea) against ui-context.md. Replaced shadcn alias tokens with direct design system tokens and removed unnecessary dark: variants.
 - Next session should focus on the Canvas foundation and React Flow integration.
+- Refactored PrismaClient initialization in `lib/prisma.ts` to use idiomatic Prisma v7 driver adapter pattern (direct connection string to `PrismaPg`).
+- Enforced `varlock` for environment variables project-wide and updated `code-standards.md`.
+- Updated `.env.schema` to include `NODE_ENV` for typed access.
