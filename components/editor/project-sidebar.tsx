@@ -16,7 +16,6 @@ interface ProjectSidebarProps {
   onRenameProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
   activeProjectId?: string;
-  variant?: "floating" | "persistent";
 }
 
 function ProjectItem({
@@ -38,9 +37,7 @@ function ProjectItem({
       <div
         className={cn(
           "flex items-center gap-1 rounded-lg transition-colors group/item",
-          isActive
-            ? "bg-accent-primary/10 border border-accent-primary/30"
-            : "hover:bg-white/5 border border-transparent",
+          isActive ? "bg-accent/10 border border-accent/20" : "hover:bg-white/5",
         )}
       >
         <button
@@ -124,7 +121,6 @@ export function ProjectSidebar({
   onRenameProject,
   onDeleteProject,
   activeProjectId,
-  variant = "floating",
 }: ProjectSidebarProps) {
   const ownedProjects = projects.filter((p) => p.isOwned);
   const sharedProjects = projects.filter((p) => !p.isOwned);

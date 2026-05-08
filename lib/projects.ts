@@ -1,33 +1,37 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import type { Project as PrismaProject } from "@/app/generated/prisma";
 import { db, type PrismaClient } from "@/lib/prisma";
+import { getIdentity } from "./project-access";
 
 export async function getProjects() {
   const { userId } = await auth();
   if (!userId) return { owned: [], shared: [] };
 
-  const user = await currentUser();
-  const email = user?.emailAddresses[0]?.emailAddress;
-
   const projectDb = db as PrismaClient;
 
-  const [owned, shared] = await Promise.all([
+  // Start identity fetch (cached) and owned projects fetch in parallel
+  const [identity, owned] = await Promise.all([
+    getIdentity(),
     projectDb.project.findMany({
       where: { ownerId: userId },
       orderBy: { updatedAt: "desc" },
     }),
-    email
-      ? projectDb.project.findMany({
-          where: {
-            collaborators: {
-              some: { email },
-            },
-            NOT: { ownerId: userId },
-          },
-          orderBy: { updatedAt: "desc" },
-        })
-      : Promise.resolve([]),
   ]);
+
+  const email = identity?.email;
+
+  // Fetch shared projects if email is available
+  const shared = email
+    ? await projectDb.project.findMany({
+        where: {
+          collaborators: {
+            some: { email },
+          },
+          NOT: { ownerId: userId },
+        },
+        orderBy: { updatedAt: "desc" },
+      })
+    : [];
 
   // Map to the UI Project type
   const mapProject = (p: PrismaProject, isOwned: boolean) => ({
