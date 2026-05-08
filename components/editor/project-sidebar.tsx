@@ -7,6 +7,7 @@ import {
 	Trash2Icon,
 	XIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +33,7 @@ function ProjectItem({
 	onDelete: () => void;
 }) {
 	const [showActions, setShowActions] = useState(false);
+	const router = useRouter();
 
 	return (
 		<div className="group relative">
@@ -39,7 +41,7 @@ function ProjectItem({
 				<button
 					type="button"
 					className="flex-1 min-w-0 p-3 text-left focus-visible:outline-2 focus-visible:outline-accent-primary focus-visible:outline-offset-2 rounded-lg"
-					onClick={() => console.log("Open project:", project.id)}
+					onClick={() => router.push(`/editor/${project.id}`)}
 				>
 					<p className="text-sm font-medium text-text-primary truncate">
 						{project.name}
