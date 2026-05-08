@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Internal Ghost AI folders
+.agents/
+.clerk/
+
+# Environment and logs
+.env*
+*.log
+
+# Generated types and cache
+next-env.d.ts
+env.d.ts
+*.tsbuildinfo
+package-lock.json
+
+# CSS and Styles
+# (Let biome.json control CSS linting/formatting)
+
+# IDE
+.vscode/

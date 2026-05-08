@@ -5,40 +5,31 @@ import { getProjects } from "@/lib/projects";
 import { WorkspaceView } from "./workspace-view";
 
 export default async function WorkspacePage({
-	params,
+  params,
 }: {
-	params: Promise<{ projectId: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-	const { userId } = await auth();
-	if (!userId) redirect("/sign-in");
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
 
-	const user = await currentUser();
-	const email = user?.emailAddresses[0]?.emailAddress;
+  const user = await currentUser();
+  const email = user?.emailAddresses[0]?.emailAddress;
 
-	const { projectId } = await params;
+  const { projectId } = await params;
 
-	// Fetch both the current project and the list of projects for the sidebar
-	const projectDb = db as PrismaClient;
-	const [project, { owned, shared }] = await Promise.all([
-		projectDb.project.findFirst({
-			where: {
-				id: projectId,
-				OR: [
-					{ ownerId: userId },
-					...(email ? [{ collaborators: { some: { email } } }] : []),
-				],
-			},
-		}),
-		getProjects(),
-	]);
+  // Fetch both the current project and the list of projects for the sidebar
+  const projectDb = db as PrismaClient;
+  const [project, { owned, shared }] = await Promise.all([
+    projectDb.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [{ ownerId: userId }, ...(email ? [{ collaborators: { some: { email } } }] : [])],
+      },
+    }),
+    getProjects(),
+  ]);
 
-	if (!project) redirect("/editor");
+  if (!project) redirect("/editor");
 
-	return (
-		<WorkspaceView
-			project={project}
-			ownedProjects={owned}
-			sharedProjects={shared}
-		/>
-	);
+  return <WorkspaceView project={project} ownedProjects={owned} sharedProjects={shared} />;
 }

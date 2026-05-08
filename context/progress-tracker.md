@@ -60,3 +60,4 @@ Update this file whenever the current phase, active feature, or implementation s
     - Removed magic sentinel strings from project authorization queries.
     - Switched to functional state updaters for sidebar toggle logic.
     - Improved suffix handling with nullish coalescing and `useMemo` for stability and React purity.
+- Set up pre-commit hook pipeline: installed `@biomejs/biome`, `simple-git-hooks`, and `lint-staged` as devDependencies. Configured `biome.json` with project-tuned formatter/linter rules. Wired `simple-git-hooks` → `lint-staged` → `biome check --write` for staged `.ts/.tsx/.js/.jsx/.json` files. Added GitHub Actions CI workflow (`.github/workflows/ci.yml`) running `biome ci` on push/PR to main.
