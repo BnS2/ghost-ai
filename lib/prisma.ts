@@ -5,7 +5,11 @@ import { PrismaClient } from "../app/generated/prisma";
 
 export { PrismaClient };
 
-const connectionString = ENV.DATABASE_URL || "";
+if (!ENV.DATABASE_URL) {
+  throw new Error("DATABASE_URL is required but was not provided in ENV.");
+}
+
+const connectionString = ENV.DATABASE_URL;
 
 // According to 05-prisma-specs.md:
 // - if it starts with prisma+posgres://, use Accelerate

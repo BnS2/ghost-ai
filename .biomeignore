@@ -16,12 +16,12 @@ build/
 
 # Generated types and cache
 next-env.d.ts
+env.d.ts
 *.tsbuildinfo
 package-lock.json
 
 # CSS and Styles
-*.css
-app/globals.css
+# (Let biome.json control CSS linting/formatting)
 
 # IDE
 .vscode/

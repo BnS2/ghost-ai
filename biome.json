@@ -57,7 +57,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.css", ".agents/**/*"],
+      "includes": [".agents/**/*", "env.d.ts", "next-env.d.ts", "*.tsbuildinfo"],
       "linter": {
         "enabled": false
       },

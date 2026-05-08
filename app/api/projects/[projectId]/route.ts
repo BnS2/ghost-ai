@@ -11,17 +11,30 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ projec
   }
 
   try {
-    let body: { name?: string; description?: string | null };
+    let json: unknown;
     try {
-      body = await req.json();
+      json = await req.json();
     } catch {
       return new NextResponse("Malformed or missing body", { status: 400 });
     }
 
-    const { name, description } = body;
+    if (typeof json !== "object" || json === null || Array.isArray(json)) {
+      return new NextResponse("Invalid body: expected object", { status: 400 });
+    }
 
-    if (name !== undefined && (name === null || name.trim() === "")) {
-      return new NextResponse("Name cannot be empty", { status: 400 });
+    const { name, description } = json as Record<string, unknown>;
+
+    if (name !== undefined) {
+      if (typeof name !== "string") {
+        return new NextResponse("Name must be a string", { status: 400 });
+      }
+      if (name.trim() === "") {
+        return new NextResponse("Name cannot be empty", { status: 400 });
+      }
+    }
+
+    if (description !== undefined && description !== null && typeof description !== "string") {
+      return new NextResponse("Description must be a string or null", { status: 400 });
     }
 
     // Verify ownership
