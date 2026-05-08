@@ -15,23 +15,31 @@ interface ProjectSidebarProps {
   onCreateProject: () => void;
   onRenameProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
+  activeProjectId?: string;
 }
 
 function ProjectItem({
   project,
   onRename,
   onDelete,
+  isActive,
 }: {
   project: Project;
   onRename: () => void;
   onDelete: () => void;
+  isActive?: boolean;
 }) {
   const [showActions, setShowActions] = useState(false);
   const router = useRouter();
 
   return (
     <div className="group relative">
-      <div className="flex items-center gap-1 rounded-lg hover:bg-white/5 transition-colors group/item">
+      <div
+        className={cn(
+          "flex items-center gap-1 rounded-lg transition-colors group/item",
+          isActive ? "bg-accent/10 border border-accent/20" : "hover:bg-white/5",
+        )}
+      >
         <button
           type="button"
           className="flex-1 min-w-0 p-3 text-left focus-visible:outline-2 focus-visible:outline-accent-primary focus-visible:outline-offset-2 rounded-lg"
@@ -105,6 +113,7 @@ export function ProjectSidebar({
   onCreateProject,
   onRenameProject,
   onDeleteProject,
+  activeProjectId,
 }: ProjectSidebarProps) {
   const ownedProjects = projects.filter((p) => p.isOwned);
   const sharedProjects = projects.filter((p) => !p.isOwned);
@@ -176,6 +185,7 @@ export function ProjectSidebar({
                       project={project}
                       onRename={() => onRenameProject(project)}
                       onDelete={() => onDeleteProject(project)}
+                      isActive={project.id === activeProjectId}
                     />
                   ))}
                 </div>
@@ -197,6 +207,7 @@ export function ProjectSidebar({
                       project={project}
                       onRename={() => onRenameProject(project)}
                       onDelete={() => onDeleteProject(project)}
+                      isActive={project.id === activeProjectId}
                     />
                   ))}
                 </div>
