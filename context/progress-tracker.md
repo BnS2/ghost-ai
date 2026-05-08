@@ -15,12 +15,12 @@ Update this file whenever the current phase, active feature, or implementation s
 - Editor Chrome implementation (Navbar, Sidebar, Layout state).
 - Authentication implementation (Clerk integration, proxy-based route protection, themed auth pages).
 - Editor Home and Project Dialogs (feature-specs/04-project-dialogs.md).
+- Prisma setup and data models (feature-specs/05-prisma-specs.md). Implemented models, client singleton with driver adapter branching, and integrated varlock for env management. Migration `init` applied successfully.
+
 
 ## In Progress
 - Canvas foundation and node-based editing.
 
-## Next Up
-- Node-based editing implementation.
 
 
 ## Open Questions
@@ -41,3 +41,6 @@ Update this file whenever the current phase, active feature, or implementation s
 - Fixed accessibility violations in ProjectSidebar (interactive static elements, missing keyboard handlers).
 - Audited all shadcn/ui components (Button, Card, Dialog, Input, Textarea, Tabs, ScrollArea) against ui-context.md. Replaced shadcn alias tokens with direct design system tokens and removed unnecessary dark: variants.
 - Next session should focus on the Canvas foundation and React Flow integration.
+- Refactored PrismaClient initialization in `lib/prisma.ts` to use idiomatic Prisma v7 driver adapter pattern (direct connection string to `PrismaPg`).
+- Enforced `varlock` for environment variables project-wide and updated `code-standards.md`.
+- Updated `.env.schema` to include `NODE_ENV` for typed access.
