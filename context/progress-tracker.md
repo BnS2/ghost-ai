@@ -62,3 +62,10 @@ Update this file whenever the current phase, active feature, or implementation s
     - Updated `EditorNavbar` with project name display and share/AI actions.
     - Updated `ProjectSidebar` to support active project highlighting.
     - Refactored `app/editor/[projectId]` to use Server Component access checks and the full-viewport shell layout.
+    - Wired AI sidebar toggle in `EditorNavbar` and `WorkspaceView` with smooth transitions.
+    - Refactored `ProjectSidebar` and `WorkspaceView` to support a persistent layout where sidebars push the canvas content rather than overlapping it, fulfilling the "fill remaining space" requirement.
+    - Polished `EditorNavbar` UI: Updated "Ghost AI" branding with high-contrast link and implemented premium "pill" styled Share and AI buttons based on reference design.
+- Hardened Clerk authentication resilience:
+    - Created `lib/clerk-utils.ts` with a `currentUserWithRetry` helper to handle transient "fetch failed" network errors from Clerk's API.
+    - Updated `lib/project-access.ts` (`getIdentity`) to use the resilient fetcher and handle error cases by falling back to `email: undefined` instead of crashing the page.
+    - Updated `lib/projects.ts` (`getProjects`) to use the robust `getIdentity` helper, ensuring the editor workspace remains accessible even if user details fetch partially fails.
