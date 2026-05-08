@@ -17,7 +17,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json}": [
-      "biome check --write --no-errors-on-unmatched"
+      "biome check --write --no-errors-on-unmatched",
+      "eslint --fix"
     ]
   },
   "dependencies": {
