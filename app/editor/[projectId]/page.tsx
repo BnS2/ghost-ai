@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getProjects } from "@/lib/projects";
 import { db, type PrismaClient } from "@/lib/prisma";
+import { getProjects } from "@/lib/projects";
 import { WorkspaceView } from "./workspace-view";
 
 export default async function WorkspacePage({
@@ -25,11 +25,7 @@ export default async function WorkspacePage({
 				id: projectId,
 				OR: [
 					{ ownerId: userId },
-					{
-						collaborators: {
-							some: { email: email || "___non_existent___" },
-						},
-					},
+					...(email ? [{ collaborators: { some: { email } } }] : []),
 				],
 			},
 		}),

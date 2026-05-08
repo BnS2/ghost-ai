@@ -2,11 +2,11 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import {
-	type DialogType,
-	generateSlug,
-	type Project,
+import type {
+	DialogType,
+	Project,
 } from "@/components/editor/use-project-dialogs";
+import { generateSlug, generateSuffix } from "@/lib/identifiers";
 
 export function useProjectActions() {
 	const [dialogType, setDialogType] = useState<DialogType>(null);
@@ -41,7 +41,7 @@ export function useProjectActions() {
 		setIsLoading(true);
 		try {
 			// Use provided suffix or generate a new one
-			const finalSuffix = suffix || Math.random().toString(36).substring(2, 6);
+			const finalSuffix = suffix ?? generateSuffix();
 			const slug = `${generateSlug(name)}-${finalSuffix}`;
 
 			const response = await fetch("/api/projects", {

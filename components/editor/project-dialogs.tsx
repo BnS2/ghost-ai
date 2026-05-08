@@ -12,7 +12,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { generateSlug, type Project } from "./use-project-dialogs";
+import { generateSlug, generateSuffix } from "@/lib/identifiers";
+import type { Project } from "./use-project-dialogs";
 
 interface ProjectDialogsProps {
 	open: boolean;
@@ -94,7 +95,7 @@ function CreateDialogContent({
 }) {
 	const [name, setName] = useState("");
 	const [slug, setSlug] = useState("");
-	const [suffix] = useState(() => Math.random().toString(36).substring(2, 6));
+	const [suffix] = useState(() => generateSuffix());
 
 	const handleNameChange = (value: string) => {
 		setName(value);

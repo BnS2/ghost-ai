@@ -56,3 +56,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Hardened Project API (`POST /api/projects`) with robust input validation and strict ID formatting.
 - Enforced project-level authorization in the workspace page (`app/editor/[projectId]/page.tsx`) by verifying ownership or collaboration status.
 - Optimized `EditorView` performance by memoizing the project list to prevent redundant sidebar re-renders.
+- Hardened codebase with several technical debt fixes:
+    - Removed magic sentinel strings from project authorization queries.
+    - Switched to functional state updaters for sidebar toggle logic.
+    - Improved suffix handling with nullish coalescing and `useMemo` for stability and React purity.

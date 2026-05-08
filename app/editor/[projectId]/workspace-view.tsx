@@ -38,7 +38,7 @@ export function WorkspaceView({
 		<div className="relative min-h-screen bg-bg-base flex flex-col font-sans">
 			<EditorNavbar
 				isSidebarOpen={isSidebarOpen}
-				onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+				onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
 			/>
 
 			<main className="flex-1 flex items-center justify-center p-4">
