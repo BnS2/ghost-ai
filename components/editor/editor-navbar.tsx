@@ -3,6 +3,7 @@
 import { UserButton } from "@clerk/nextjs";
 import { MessageSquareIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, Share2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface EditorNavbarProps {
   isSidebarOpen: boolean;

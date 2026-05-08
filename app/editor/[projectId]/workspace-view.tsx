@@ -6,6 +6,7 @@ import { ProjectDialogs } from "@/components/editor/project-dialogs";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
 import type { Project } from "@/components/editor/use-project-dialogs";
 import { useProjectActions } from "@/hooks/use-project-actions";
+import { cn } from "@/lib/utils";
 
 interface WorkspaceViewProps {
   project: { id: string; name: string };
@@ -15,6 +16,7 @@ interface WorkspaceViewProps {
 
 export function WorkspaceView({ project, ownedProjects, sharedProjects }: WorkspaceViewProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(true); // Open by default on desktop
   const {
     dialogType,
     selectedProject,
