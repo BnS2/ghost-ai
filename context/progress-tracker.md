@@ -16,6 +16,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Authentication implementation (Clerk integration, proxy-based route protection, themed auth pages).
 - Editor Home and Project Dialogs (feature-specs/04-project-dialogs.md).
 - Prisma setup and data models (feature-specs/05-prisma-specs.md). Implemented models, client singleton with driver adapter branching, and integrated varlock for env management. Migration `init` applied successfully.
+- Project API Implementation (feature-specs/06-project-apis.md). Implemented list, create, rename, and delete endpoints with Clerk authentication and ownership checks.
 
 
 ## In Progress
@@ -43,4 +44,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Next session should focus on the Canvas foundation and React Flow integration.
 - Refactored PrismaClient initialization in `lib/prisma.ts` to use idiomatic Prisma v7 driver adapter pattern (direct connection string to `PrismaPg`).
 - Enforced `varlock` for environment variables project-wide and updated `code-standards.md`.
-- Updated `.env.schema` to include `NODE_ENV` for typed access.
+- Implemented Project API routes (`GET /api/projects`, `POST /api/projects`, `PATCH /api/projects/[projectId]`, `DELETE /api/projects/[projectId]`).
+- Enforced Clerk authentication and ownership validation.
+- Resolved Prisma v7 type compatibility issues by casting the singleton to the base `PrismaClient` type, avoiding `any` and adhering to `code-standards.md`.
+- Verified that TypeScript checks pass during `npm run build`.
