@@ -15,12 +15,12 @@ Update this file whenever the current phase, active feature, or implementation s
 - Editor Chrome implementation (Navbar, Sidebar, Layout state).
 - Authentication implementation (Clerk integration, proxy-based route protection, themed auth pages).
 - Editor Home and Project Dialogs (feature-specs/04-project-dialogs.md).
+- Prisma setup and data models (feature-specs/05-prisma-specs.md). Implemented models, client singleton with driver adapter branching, and integrated varlock for env management. Migration `init` applied successfully.
+
 
 ## In Progress
 - Canvas foundation and node-based editing.
 
-## Next Up
-- Node-based editing implementation.
 
 
 ## Open Questions
