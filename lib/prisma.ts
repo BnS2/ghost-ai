@@ -24,14 +24,19 @@ const createPrismaClient = () => {
 	}
 };
 
+// Define a stable type for the database client to avoid union compatibility issues.
+// We cast the singleton to the base PrismaClient to ensure standard CRUD operations
+// have consistent signatures, while keeping the runtime benefits of extensions.
 type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>;
 
 const globalForPrisma = global as unknown as {
 	prisma: ExtendedPrismaClient | undefined;
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
+// Export the singleton. We cast to the base PrismaClient type to resolve
+// the "not callable" union errors in API routes, avoiding the use of 'any'.
+export const db = (globalForPrisma.prisma ?? createPrismaClient()) as unknown as PrismaClient;
 
 if (ENV.NODE_ENV !== "production") {
-	globalForPrisma.prisma = db as ExtendedPrismaClient;
+	globalForPrisma.prisma = db as unknown as ExtendedPrismaClient;
 }
