@@ -60,22 +60,24 @@ export function EditorNavbar({
           <Share2Icon className="h-4 w-4" />
           <span className="text-xs font-bold">Share</span>
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleAiSidebar}
-          className={cn(
-            "h-8 gap-2 px-4 rounded-full transition-all duration-300 active:scale-95",
-            isAiSidebarOpen
-              ? "bg-accent-primary text-black hover:bg-accent-primary/90 shadow-[0_0_15px_rgba(0,200,212,0.3)]"
-              : "bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20",
-          )}
-          aria-label={isAiSidebarOpen ? "Close AI assistant" : "Open AI assistant"}
-          aria-pressed={isAiSidebarOpen}
-        >
-          <SparklesIcon className={cn("h-4 w-4", isAiSidebarOpen ? "fill-black" : "fill-none")} />
-          <span className="text-xs font-bold">AI</span>
-        </Button>
+        {onToggleAiSidebar && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleAiSidebar}
+            className={cn(
+              "h-8 gap-2 px-4 rounded-full transition-all duration-300 active:scale-95",
+              isAiSidebarOpen
+                ? "bg-accent-primary text-black hover:bg-accent-primary/90 shadow-[0_0_15px_rgba(0,200,212,0.3)]"
+                : "bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20",
+            )}
+            aria-label={isAiSidebarOpen ? "Close AI assistant" : "Open AI assistant"}
+            aria-pressed={isAiSidebarOpen}
+          >
+            <SparklesIcon className={cn("h-4 w-4", isAiSidebarOpen ? "fill-black" : "fill-none")} />
+            <span className="text-xs font-bold">AI</span>
+          </Button>
+        )}
         <UserButton
           appearance={{
             elements: {

@@ -8,8 +8,16 @@ export async function getIdentity() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const user = await currentUser();
-  const email = user?.emailAddresses[0]?.emailAddress;
+  const user = await currentUser().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Failed to fetch current user from Clerk:", message);
+    return null;
+  });
+
+  if (!user) return { userId, email: undefined };
+
+  const primaryEmailId = user.primaryEmailAddressId;
+  const email = user.emailAddresses.find((e) => e.id === primaryEmailId)?.emailAddress;
 
   return { userId, email };
 }

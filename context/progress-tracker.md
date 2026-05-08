@@ -19,6 +19,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - Project API Implementation (feature-specs/06-project-apis.md). Implemented list, create, rename, and delete endpoints with Clerk authentication and ownership checks.
 - Wire the editor home sidebar and dialogs to the real project API (feature-specs/07-wire-editor-home.md). Wired mutations, server-side fetching, and workspace navigation.
 - Editor Workspace Shell (feature-specs/08-editor-workspace-shell.md). Implemented layout, access checks, and active project highlighting.
+- Technical Findings Remediation:
+    - Refactored AI sidebar state to be responsive and desktop-default in `workspace-view.tsx`.
+    - Conditionalized AI toggle button in `editor-navbar.tsx`.
+    - Made project sidebar tabs controlled to prevent stale UI in `project-sidebar.tsx`.
+    - Hardened identity retrieval and primary email resolution in `lib/project-access.ts`.
 
 ## In Progress
 - Canvas foundation and node-based editing.

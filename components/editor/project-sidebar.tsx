@@ -129,9 +129,14 @@ export function ProjectSidebar({
   const ownedProjects = projects.filter((p) => p.isOwned);
   const sharedProjects = projects.filter((p) => !p.isOwned);
 
-  const isActiveOwned = ownedProjects.some((p) => p.id === activeProjectId);
   const isActiveShared = sharedProjects.some((p) => p.id === activeProjectId);
-  const defaultTab = isActiveShared ? "shared" : "my-projects";
+  const [activeTab, setActiveTab] = useState<string>(isActiveShared ? "shared" : "my-projects");
+  const [prevActiveProjectId, setPrevActiveProjectId] = useState(activeProjectId);
+
+  if (activeProjectId !== prevActiveProjectId) {
+    setPrevActiveProjectId(activeProjectId);
+    setActiveTab(isActiveShared ? "shared" : "my-projects");
+  }
 
   return (
     <>
@@ -172,7 +177,7 @@ export function ProjectSidebar({
         </div>
 
         <div className="px-6 pt-6 flex-1 flex flex-col min-h-0 overflow-hidden">
-          <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <div className="bg-elevated p-1 rounded-full mb-6">
               <TabsList className="w-full bg-transparent p-0 h-9 border-none flex">
                 <TabsTrigger
