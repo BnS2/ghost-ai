@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/prisma";
+import { db, type PrismaClient } from "@/lib/prisma";
 
 export async function GET() {
 	const { userId } = await auth();
@@ -10,7 +10,8 @@ export async function GET() {
 	}
 
 	try {
-		const projects = await db.project.findMany({
+		const projectDb = db as PrismaClient;
+		const projects = await projectDb.project.findMany({
 			where: {
 				ownerId: userId,
 			},
@@ -34,18 +35,25 @@ export async function POST(req: Request) {
 	}
 
 	try {
-		const body = await req.json();
+		let body: { name?: string; description?: string | null } = {};
+		try {
+			body = await req.json();
+		} catch {
+			// Fallback to empty body for graceful degradation
+		}
+
 		const { name, description } = body;
 
-		const project = await db.project.create({
+		const projectDb = db as PrismaClient;
+		const project = await projectDb.project.create({
 			data: {
 				ownerId: userId,
 				name: name || "Untitled Project",
-				description: description || null,
+				description: description ?? null,
 			},
 		});
 
-		return NextResponse.json(project);
+		return NextResponse.json(project, { status: 201 });
 	} catch (error) {
 		console.error("[PROJECTS_POST]", error);
 		return new NextResponse("Internal Error", { status: 500 });

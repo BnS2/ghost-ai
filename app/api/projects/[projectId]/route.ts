@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/prisma";
+import { db, type PrismaClient } from "@/lib/prisma";
 
 export async function PATCH(
 	req: Request,
@@ -14,15 +14,22 @@ export async function PATCH(
 	}
 
 	try {
-		const body = await req.json();
+		let body: { name?: string; description?: string | null };
+		try {
+			body = await req.json();
+		} catch {
+			return new NextResponse("Malformed or missing body", { status: 400 });
+		}
+
 		const { name, description } = body;
 
-		if (!projectId) {
-			return new NextResponse("Project ID is required", { status: 400 });
+		if (name !== undefined && (name === null || name.trim() === "")) {
+			return new NextResponse("Name cannot be empty", { status: 400 });
 		}
 
 		// Verify ownership
-		const existingProject = await db.project.findUnique({
+		const projectDb = db as PrismaClient;
+		const existingProject = await projectDb.project.findUnique({
 			where: {
 				id: projectId,
 			},
@@ -36,13 +43,13 @@ export async function PATCH(
 			return new NextResponse("Forbidden", { status: 403 });
 		}
 
-		const project = await db.project.update({
+		const project = await projectDb.project.update({
 			where: {
 				id: projectId,
 			},
 			data: {
-				name,
-				description,
+				name: name?.trim(),
+				description: description ?? null,
 			},
 		});
 
@@ -65,12 +72,9 @@ export async function DELETE(
 	}
 
 	try {
-		if (!projectId) {
-			return new NextResponse("Project ID is required", { status: 400 });
-		}
-
 		// Verify ownership
-		const existingProject = await db.project.findUnique({
+		const projectDb = db as PrismaClient;
+		const existingProject = await projectDb.project.findUnique({
 			where: {
 				id: projectId,
 			},
@@ -84,7 +88,7 @@ export async function DELETE(
 			return new NextResponse("Forbidden", { status: 403 });
 		}
 
-		const project = await db.project.delete({
+		const project = await projectDb.project.delete({
 			where: {
 				id: projectId,
 			},

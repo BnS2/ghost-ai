@@ -23,6 +23,8 @@ Security:
 - unauthenticated requests return `401`
 - only the project owner can rename or delete
 - non-owner mutations return `403`
+- malformed or invalid IDs return `400`
+- valid-but-missing resources return `404`
 
 Keep this backend-only. Do not wire the UI yet
 
