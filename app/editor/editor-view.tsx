@@ -1,7 +1,7 @@
 "use client";
 
 import { PlusIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
@@ -29,7 +29,10 @@ export function EditorView({ ownedProjects, sharedProjects }: EditorViewProps) {
 		handleDelete,
 	} = useProjectActions();
 
-	const allProjects = [...ownedProjects, ...sharedProjects];
+	const allProjects = useMemo(
+		() => [...ownedProjects, ...sharedProjects],
+		[ownedProjects, sharedProjects],
+	);
 
 	return (
 		<div className="relative min-h-screen bg-bg-base flex flex-col font-sans">

@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db, type PrismaClient } from "@/lib/prisma";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
+import { db, type PrismaClient } from "@/lib/prisma";
 
 export default async function WorkspacePage({
 	params,
@@ -11,11 +11,24 @@ export default async function WorkspacePage({
 	const { userId } = await auth();
 	if (!userId) redirect("/sign-in");
 
+	const user = await currentUser();
+	const email = user?.emailAddresses[0]?.emailAddress;
+
 	const { projectId } = await params;
 
 	const projectDb = db as PrismaClient;
-	const project = await projectDb.project.findUnique({
-		where: { id: projectId },
+	const project = await projectDb.project.findFirst({
+		where: {
+			id: projectId,
+			OR: [
+				{ ownerId: userId },
+				{
+					collaborators: {
+						some: { email: email || "___non_existent___" },
+					},
+				},
+			],
+		},
 	});
 
 	if (!project) redirect("/editor");

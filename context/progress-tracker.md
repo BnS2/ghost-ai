@@ -53,3 +53,6 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented `useProjectActions` hook for centralized mutation management.
 - Refactored `app/editor/page.tsx` to a Server Component for initial data fetching.
 - Added redirection logic when deleting the active workspace.
+- Hardened Project API (`POST /api/projects`) with robust input validation and strict ID formatting.
+- Enforced project-level authorization in the workspace page (`app/editor/[projectId]/page.tsx`) by verifying ownership or collaboration status.
+- Optimized `EditorView` performance by memoizing the project list to prevent redundant sidebar re-renders.
