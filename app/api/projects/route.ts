@@ -35,18 +35,19 @@ export async function POST(req: Request) {
 	}
 
 	try {
-		let body: { name?: string; description?: string | null } = {};
+		let body: { id?: string; name?: string; description?: string | null } = {};
 		try {
 			body = await req.json();
 		} catch {
 			// Fallback to empty body for graceful degradation
 		}
 
-		const { name, description } = body;
+		const { id, name, description } = body;
 
 		const projectDb = db as PrismaClient;
 		const project = await projectDb.project.create({
 			data: {
+				id: id || undefined,
 				ownerId: userId,
 				name: name || "Untitled Project",
 				description: description ?? null,

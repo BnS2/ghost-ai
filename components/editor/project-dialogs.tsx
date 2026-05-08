@@ -18,14 +18,22 @@ interface ProjectDialogsProps {
 	open: boolean;
 	dialogType: "create" | "rename" | "delete" | null;
 	selectedProject: Project | null;
+	isLoading?: boolean;
 	onClose: () => void;
+	onCreate?: (name: string) => void;
+	onRename?: (projectId: string, name: string) => void;
+	onDelete?: (projectId: string) => void;
 }
 
 export function ProjectDialogs({
 	open,
 	dialogType,
 	selectedProject,
+	isLoading,
 	onClose,
+	onCreate,
+	onRename,
+	onDelete,
 }: ProjectDialogsProps) {
 	const handleOpenChange = (isOpen: boolean) => {
 		if (!isOpen) {
@@ -36,7 +44,11 @@ export function ProjectDialogs({
 	if (dialogType === "create") {
 		return (
 			<Dialog open={open} onOpenChange={handleOpenChange}>
-				<CreateDialogContent onClose={onClose} />
+				<CreateDialogContent
+					onClose={onClose}
+					onCreate={onCreate}
+					isLoading={isLoading}
+				/>
 			</Dialog>
 		);
 	}
@@ -48,6 +60,8 @@ export function ProjectDialogs({
 					key={selectedProject.id}
 					project={selectedProject}
 					onClose={onClose}
+					onRename={onRename}
+					isLoading={isLoading}
 				/>
 			</Dialog>
 		);
@@ -56,7 +70,12 @@ export function ProjectDialogs({
 	if (dialogType === "delete" && selectedProject) {
 		return (
 			<Dialog open={open} onOpenChange={handleOpenChange}>
-				<DeleteDialogContent project={selectedProject} onClose={onClose} />
+				<DeleteDialogContent
+					project={selectedProject}
+					onClose={onClose}
+					onDelete={onDelete}
+					isLoading={isLoading}
+				/>
 			</Dialog>
 		);
 	}
@@ -64,7 +83,15 @@ export function ProjectDialogs({
 	return null;
 }
 
-function CreateDialogContent({ onClose }: { onClose: () => void }) {
+function CreateDialogContent({
+	onClose,
+	onCreate,
+	isLoading,
+}: {
+	onClose: () => void;
+	onCreate?: (name: string) => void;
+	isLoading?: boolean;
+}) {
 	const [name, setName] = useState("");
 	const [slug, setSlug] = useState("");
 
@@ -74,8 +101,7 @@ function CreateDialogContent({ onClose }: { onClose: () => void }) {
 	};
 
 	const handleSubmit = () => {
-		console.log("Submit: create", { name, slug });
-		onClose();
+		onCreate?.(name);
 	};
 
 	return (
@@ -99,24 +125,30 @@ function CreateDialogContent({ onClose }: { onClose: () => void }) {
 						placeholder="My Architecture Project"
 						value={name}
 						onChange={(e) => handleNameChange(e.target.value)}
+						disabled={isLoading}
 						autoFocus
 					/>
 				</div>
 				{slug && (
-					<div className="flex items-center gap-2 text-sm text-text-muted">
-						<code className="px-2 py-1 bg-elevated rounded-md font-mono text-accent-primary">
-							{slug}
-						</code>
+					<div className="flex flex-col gap-1.5">
+						<p className="text-[11px] font-bold text-muted uppercase tracking-wider">
+							Room ID Preview
+						</p>
+						<div className="flex items-center gap-2 text-sm text-text-muted">
+							<code className="px-2 py-1 bg-elevated rounded-md font-mono text-accent-primary">
+								{slug}-[xxxx]
+							</code>
+						</div>
 					</div>
 				)}
 			</div>
 			<DialogFooter>
-				<Button variant="outline" onClick={onClose}>
+				<Button variant="outline" onClick={onClose} disabled={isLoading}>
 					Cancel
 				</Button>
-				<Button onClick={handleSubmit} disabled={!name.trim()}>
+				<Button onClick={handleSubmit} disabled={!name.trim() || isLoading}>
 					<PlusIcon className="h-4 w-4" />
-					Create Project
+					{isLoading ? "Creating..." : "Create Project"}
 				</Button>
 			</DialogFooter>
 		</DialogContent>
@@ -126,15 +158,18 @@ function CreateDialogContent({ onClose }: { onClose: () => void }) {
 function RenameDialogContent({
 	project,
 	onClose,
+	onRename,
+	isLoading,
 }: {
 	project: Project;
 	onClose: () => void;
+	onRename?: (projectId: string, name: string) => void;
+	isLoading?: boolean;
 }) {
 	const [name, setName] = useState(project.name);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		// Small delay to ensure Dialog is fully open and interactive
 		const timer = setTimeout(() => {
 			inputRef.current?.focus();
 			inputRef.current?.select();
@@ -144,8 +179,7 @@ function RenameDialogContent({
 
 	const handleSubmit = () => {
 		if (!name.trim()) return;
-		console.log("Submit: rename", { name });
-		onClose();
+		onRename?.(project.id, name);
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -178,16 +212,17 @@ function RenameDialogContent({
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 						onKeyDown={handleKeyDown}
+						disabled={isLoading}
 					/>
 				</div>
 			</div>
 			<DialogFooter>
-				<Button variant="outline" onClick={onClose}>
+				<Button variant="outline" onClick={onClose} disabled={isLoading}>
 					Cancel
 				</Button>
-				<Button onClick={handleSubmit} disabled={!name.trim()}>
+				<Button onClick={handleSubmit} disabled={!name.trim() || isLoading}>
 					<PencilIcon className="h-4 w-4 mr-2" />
-					Save Changes
+					{isLoading ? "Saving..." : "Save Changes"}
 				</Button>
 			</DialogFooter>
 		</DialogContent>
@@ -197,13 +232,16 @@ function RenameDialogContent({
 function DeleteDialogContent({
 	project,
 	onClose,
+	onDelete,
+	isLoading,
 }: {
 	project: Project;
 	onClose: () => void;
+	onDelete?: (projectId: string) => void;
+	isLoading?: boolean;
 }) {
 	const handleSubmit = () => {
-		console.log("Submit: delete", { id: project.id });
-		onClose();
+		onDelete?.(project.id);
 	};
 
 	return (
@@ -219,12 +257,16 @@ function DeleteDialogContent({
 				</DialogDescription>
 			</DialogHeader>
 			<DialogFooter className="sm:justify-end">
-				<Button variant="outline" onClick={onClose}>
+				<Button variant="outline" onClick={onClose} disabled={isLoading}>
 					Cancel
 				</Button>
-				<Button variant="destructive" onClick={handleSubmit}>
+				<Button
+					variant="destructive"
+					onClick={handleSubmit}
+					disabled={isLoading}
+				>
 					<Trash2Icon className="h-4 w-4 mr-2" />
-					Delete Project
+					{isLoading ? "Deleting..." : "Delete Project"}
 				</Button>
 			</DialogFooter>
 		</DialogContent>
