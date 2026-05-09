@@ -1,7 +1,7 @@
 import { EdgeLabelRenderer, type EdgeProps, getSmoothStepPath, Position } from "@xyflow/react";
-import { flushSync } from "react-dom";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import type { canvasEdge } from "@/types/canvas";
 
 const EMPTY_EDGE_LABEL_HINT = "Label";
