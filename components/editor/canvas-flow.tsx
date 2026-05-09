@@ -14,6 +14,7 @@ import {
   MiniMap,
   type NodeProps,
   ReactFlow,
+  useNodesInitialized,
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -123,10 +124,12 @@ export function CanvasFlow({
   const canRedo = useCanRedo();
 
   const reactFlow = useReactFlow<canvasNode, canvasEdge>();
+  const isInitialized = useNodesInitialized();
   const nodeIdCounter = useRef(0);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
   const lastTemplateImportIdRef = useRef<number | null>(null);
+  const fitViewAppliedRef = useRef<number | null>(null);
   const miniMapNodeColor = useCallback(
     (node: canvasNode) => node.data.textColor ?? DEFAULT_NODE_COLOR.text,
     [],
@@ -160,6 +163,7 @@ export function CanvasFlow({
     }
 
     lastTemplateImportIdRef.current = templateImport.id;
+    fitViewAppliedRef.current = null;
 
     const nextNodes = templateImport.template.nodes.map(cloneTemplateNode);
     const nextEdges = templateImport.template.edges.map(cloneTemplateEdge);
@@ -179,15 +183,29 @@ export function CanvasFlow({
         ...nextNodes.map((node) => ({ item: node, type: "add" as const })),
       ]);
     }
+  }, [onEdgesChange, onNodesChange, templateImport]);
 
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        reactFlow.fitView({ duration: 260, padding: 0.22 });
-      });
-    });
+  useEffect(() => {
+    if (
+      !templateImport ||
+      !isInitialized ||
+      fitViewAppliedRef.current === templateImport.id
+    ) {
+      return;
+    }
 
+    const templateNodeIds = new Set(templateImport.template.nodes.map((node) => node.id));
+    const hasImportedNodes =
+      nodes.length === templateNodeIds.size && nodes.every((node) => templateNodeIds.has(node.id));
+
+    if (!hasImportedNodes) {
+      return;
+    }
+
+    fitViewAppliedRef.current = templateImport.id;
+    void reactFlow.fitView({ duration: 260, padding: 0.22 });
     onTemplateImported?.();
-  }, [onEdgesChange, onNodesChange, onTemplateImported, reactFlow, templateImport]);
+  }, [isInitialized, nodes, onTemplateImported, reactFlow, templateImport]);
 
   const updateNodeLabel = useCallback(
     (nodeId: string, label: string) => {

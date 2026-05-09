@@ -69,6 +69,7 @@ export function EditorNavbar({
             variant="outline"
             size="sm"
             onClick={onOpenTemplates}
+            aria-label="Open templates"
             className="h-8 gap-2 px-4 rounded-full bg-surface/50 border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface transition-all flex"
           >
             <LayoutTemplateIcon className="h-4 w-4" />

@@ -1,7 +1,6 @@
 import { EdgeLabelRenderer, type EdgeProps, getSmoothStepPath, Position } from "@xyflow/react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import type { canvasEdge } from "@/types/canvas";
 
 const EMPTY_EDGE_LABEL_HINT = "Label";
@@ -56,19 +55,6 @@ export function CanvasEdge({
   });
 
   useEffect(() => {
-    if (isEditing) {
-      return;
-    }
-
-    // Only sync when not editing to avoid cascading renders
-    if (draftLabel !== savedLabel) {
-      flushSync(() => {
-        setDraftLabel(savedLabel);
-      });
-    }
-  }, [isEditing, savedLabel, draftLabel]);
-
-  useEffect(() => {
     if (!isEditing) {
       return;
     }
@@ -105,7 +91,7 @@ export function CanvasEdge({
     saveLabel();
   };
 
-  const onEdgeKeyDown = (event: React.KeyboardEvent<SVGPathElement>) => {
+  const onLabelKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== "Enter" && event.key !== " ") {
       return;
     }
@@ -144,20 +130,17 @@ export function CanvasEdge({
         strokeOpacity={isActive ? 0.95 : 0.48}
         strokeWidth={1.6}
       />
-      {/* biome-ignore lint/a11y/useSemanticElements: SVG edge paths cannot be replaced with HTML buttons inside React Flow's SVG layer. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: The SVG path only supports pointer hover/double-click; the HTML label button is the keyboard-accessible edit control. */}
       <path
         className="react-flow__edge-interaction cursor-pointer"
         d={edgePath}
         fill="none"
-        onKeyDown={onEdgeKeyDown}
         onDoubleClick={startEditing}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        role="button"
         stroke="transparent"
         strokeLinecap="round"
         strokeWidth={interactionWidth}
-        tabIndex={0}
       />
       {shouldShowLabel && (
         <EdgeLabelRenderer>
@@ -186,8 +169,9 @@ export function CanvasEdge({
               <button
                 aria-label="Edit edge label"
                 className={`${EDGE_LABEL_CLASS} ${visibleLabel.length > 0 ? "" : "text-copy-muted opacity-55"}`}
-                onClick={stopCanvasInteraction}
+                onClick={startEditing}
                 onDoubleClick={startEditing}
+                onKeyDown={onLabelKeyDown}
                 onMouseDown={stopCanvasInteraction}
                 onPointerDown={stopCanvasInteraction}
                 type="button"

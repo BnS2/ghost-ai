@@ -35,6 +35,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented Edge Behavior (feature-specs/16-edge-behavior.md). Added custom routed canvas edges with easier interaction paths, arrowheads, hover/selection brightening, and inline label editing through the existing Liveblocks-backed edge state.
 - Implemented Canvas Ergonomics (feature-specs/17-canvas-ergonomics.md). Added the floating zoom/history control bar, React Flow zoom/fit actions, Liveblocks undo/redo controls, and keyboard shortcuts that skip editable fields.
 - Implemented Starter Templates (feature-specs/18-starter-templates.md). Added typed static canvas templates, a preview/import modal, a navbar entry point, and Liveblocks-backed replace import behavior with fit-view.
+- Remediated canvas accessibility and timing findings: normalized edge label draft sync without `flushSync`, made edge labels the single keyboard-accessible edit control, labeled the compact Templates navbar button, and moved template import viewport fitting to React Flow node initialization.
+- Removed redundant edge draft-label sync effect so edge editing no longer calls React state setters synchronously inside an effect.
 
 ## In Progress
 - (none — next: canvas persistence)
