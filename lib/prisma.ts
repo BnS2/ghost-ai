@@ -41,6 +41,6 @@ const globalForPrisma = global as unknown as {
 // extension functionality (like Accelerate) across the application.
 export const db = globalForPrisma.prisma ?? createPrismaClient();
 
-if (ENV.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;
 }

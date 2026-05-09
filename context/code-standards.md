@@ -63,3 +63,4 @@
 - Do not use `process.env` directly in the application code.
 - Use the typed `ENV` object from `varlock/env` for all environment variable access.
 - All environment variables must be defined in `.env.schema` for validation.
+- Exception: `NODE_ENV` is controlled by Next.js/Node runtime commands and must not be declared in `.env.schema` or local `.env*` files.

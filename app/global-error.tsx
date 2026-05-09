@@ -1,10 +1,11 @@
 "use client";
 
 export default function GlobalError({
-  reset,
+  error,
+  unstable_retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  unstable_retry: () => void;
 }) {
   void error;
   return (
@@ -12,7 +13,7 @@ export default function GlobalError({
       <body>
         <div style={{ padding: "20px", textAlign: "center" }}>
           <h2>Something went wrong!</h2>
-          <button type="button" onClick={() => reset()}>
+          <button type="button" onClick={() => unstable_retry()}>
             Try again
           </button>
         </div>
