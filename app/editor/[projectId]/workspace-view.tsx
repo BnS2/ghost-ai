@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
 import { ShareDialog } from "@/components/editor/share-dialog";
+import type { CanvasTemplate } from "@/components/editor/starter-templates";
+import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
 import type { Project } from "@/components/editor/use-project-dialogs";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,12 @@ export function WorkspaceView({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAiSidebarOpenInternal, setIsAiSidebarOpenInternal] = useState<boolean | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [templateImport, setTemplateImport] = useState<{
+    id: number;
+    template: CanvasTemplate;
+  } | null>(null);
+  const templateImportIdRef = useRef(0);
 
   // Derived state: Use internal override if set, otherwise follow isDesktop
   const isAiSidebarOpen = isAiSidebarOpenInternal ?? isDesktop;
@@ -44,6 +52,10 @@ export function WorkspaceView({
   const toggleAiSidebar = useCallback(() => {
     setIsAiSidebarOpenInternal((prev) => !(prev ?? isDesktop));
   }, [isDesktop]);
+  const importTemplate = useCallback((template: CanvasTemplate) => {
+    templateImportIdRef.current += 1;
+    setTemplateImport({ id: templateImportIdRef.current, template });
+  }, []);
   const {
     dialogType,
     selectedProject,
@@ -69,6 +81,7 @@ export function WorkspaceView({
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         projectName={project.name}
         isAiSidebarOpen={isAiSidebarOpen}
+        onOpenTemplates={() => setIsTemplatesModalOpen(true)}
         onToggleAiSidebar={toggleAiSidebar}
         onShare={() => setIsShareDialogOpen(true)}
       />
@@ -88,7 +101,11 @@ export function WorkspaceView({
 
         {/* Central Canvas Area */}
         <main className="flex-1 relative bg-canvas-bg overflow-hidden flex flex-col">
-          <CanvasWrapper projectId={project.id} />
+          <CanvasWrapper
+            projectId={project.id}
+            onTemplateImported={() => setTemplateImport(null)}
+            templateImport={templateImport}
+          />
         </main>
 
         {/* Right Sidebar Placeholder (AI Chat) */}
@@ -129,6 +146,11 @@ export function WorkspaceView({
         onClose={() => setIsShareDialogOpen(false)}
         projectId={project.id}
         isOwner={isOwner}
+      />
+      <StarterTemplatesModal
+        onImport={importTemplate}
+        onOpenChange={setIsTemplatesModalOpen}
+        open={isTemplatesModalOpen}
       />
     </div>
   );

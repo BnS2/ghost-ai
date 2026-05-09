@@ -2,9 +2,11 @@
 
 import { ClientSideSuspense, LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense";
 import { ReactFlowProvider } from "@xyflow/react";
-import { Component, type ReactNode } from "react";
+import { Component, type ReactNode, useCallback, useState } from "react";
 import { CanvasFlow } from "./canvas-flow";
-import { ShapePanel } from "./shape-panel";
+import { NodeShape } from "./node-shape";
+import { type ShapeDragPreviewState, ShapePanel } from "./shape-panel";
+import type { CanvasTemplate } from "./starter-templates";
 
 class ErrorBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -27,7 +29,28 @@ class ErrorBoundary extends Component<
   }
 }
 
-export function CanvasWrapper({ projectId }: { projectId: string }) {
+interface CanvasWrapperProps {
+  projectId: string;
+  onTemplateImported?: () => void;
+  templateImport?: {
+    id: number;
+    template: CanvasTemplate;
+  } | null;
+}
+
+export function CanvasWrapper({
+  projectId,
+  onTemplateImported,
+  templateImport,
+}: CanvasWrapperProps) {
+  const [shapePreview, setShapePreview] = useState<ShapeDragPreviewState | null>(null);
+  const moveShapePreview = useCallback((position: { x: number; y: number }) => {
+    setShapePreview((preview) => (preview ? { ...preview, ...position } : preview));
+  }, []);
+  const clearShapePreview = useCallback(() => {
+    setShapePreview(null);
+  }, []);
+
   return (
     <ErrorBoundary
       fallback={
@@ -64,8 +87,28 @@ export function CanvasWrapper({ projectId }: { projectId: string }) {
           >
             <ReactFlowProvider>
               <div className="relative h-full w-full">
-                <CanvasFlow />
-                <ShapePanel />
+                <CanvasFlow
+                  onPreviewClear={clearShapePreview}
+                  onPreviewMove={moveShapePreview}
+                  onTemplateImported={onTemplateImported}
+                  templateImport={templateImport}
+                />
+                <ShapePanel onPreviewChange={setShapePreview} />
+                {shapePreview ? (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed left-0 top-0 z-50"
+                    style={{
+                      height: shapePreview.height,
+                      transform: `translate(${shapePreview.x - shapePreview.width / 2}px, ${
+                        shapePreview.y - shapePreview.height / 2
+                      }px)`,
+                      width: shapePreview.width,
+                    }}
+                  >
+                    <NodeShape preview shape={shapePreview.shape} />
+                  </div>
+                ) : null}
               </div>
             </ReactFlowProvider>
           </ClientSideSuspense>

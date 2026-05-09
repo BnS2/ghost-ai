@@ -7,7 +7,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Phase 1: Foundation
 
 ## Current Goal
-- Canvas foundation and node-based editing.
+- Starter template import for the collaborative canvas.
 
 ## Completed
 - Project context and architecture definition.
@@ -27,13 +27,20 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented Liveblocks Setup (feature-specs/10-liveblocks-setup.md). Configured `liveblocks.config.ts`, added a proper cached Liveblocks node client in `lib/liveblocks.ts`, and implemented the `/api/liveblocks-auth` route with project access checks.
 - Implemented Base Canvas (feature-specs/11-base-canvas.md). Created `types/canvas.ts` with `canvasNode`/`canvasEdge` types and `CanvasNodeData`. Created `components/editor/canvas-wrapper.tsx` with `LiveblocksProvider`, `RoomProvider`, `ClientSideSuspense`, and class-based ErrorBoundary. Created `components/editor/canvas-flow.tsx` using `useLiveblocksFlow` (suspense mode) wired to `ReactFlow` with `ConnectionMode.Loose`, `fitView`, `MiniMap`, and dot-pattern `Background`. Replaced the canvas placeholder in `workspace-view.tsx` with `<CanvasWrapper>`.
 - Implemented Shape Panel (feature-specs/12-shape-panel.md). Added the floating bottom shape toolbar, shape drag payloads, drop-to-create custom canvas nodes, and basic bordered rectangle node rendering.
-- Themed the React Flow MiniMap to match the dark editor UI, including token-based surface, border, viewport mask, and node preview colors.
+- Themed the React Flow MiniMap to match the dark editor UI, including token-based surface, border, viewport mask, and vivid node preview colors.
+- Implemented Node Shape Rendering (feature-specs/13-node-shape.md). Replaced placeholder custom nodes with CSS-rendered rectangle, pill, and circle variants; SVG-rendered diamond, hexagon, and cylinder variants; selected-state border highlighting; and cursor-following shape drag previews.
+- Updated custom canvas node connection handles so all four sides can start or receive connections under React Flow loose connection mode, with stable per-side handle IDs and a more forgiving connection radius.
+- Implemented Node Editing (feature-specs/14-node-editing.md). Added selected-node resize handles with minimum dimensions and inline centered label editing that syncs through the existing Liveblocks React Flow state.
+- Implemented Nodes Color Toolbar (feature-specs/15-nodes-color-toolbar.md). Added a selected-node floating palette toolbar that applies predefined background/text color pairs through the existing Liveblocks-backed React Flow node state.
+- Implemented Edge Behavior (feature-specs/16-edge-behavior.md). Added custom routed canvas edges with easier interaction paths, arrowheads, hover/selection brightening, and inline label editing through the existing Liveblocks-backed edge state.
+- Implemented Canvas Ergonomics (feature-specs/17-canvas-ergonomics.md). Added the floating zoom/history control bar, React Flow zoom/fit actions, Liveblocks undo/redo controls, and keyboard shortcuts that skip editable fields.
+- Implemented Starter Templates (feature-specs/18-starter-templates.md). Added typed static canvas templates, a preview/import modal, a navbar entry point, and Liveblocks-backed replace import behavior with fit-view.
 
 ## In Progress
-- (none — next: shape-specific node visuals or canvas persistence)
+- (none — next: canvas persistence)
 
 ## Open Questions
-- Next.js 16.2.4 build fails on `/_global-error` prerendering with `TypeError: Cannot read properties of null (reading 'useContext')`. This is a known Next.js/Clerk version interaction issue unrelated to recent code changes. TypeScript type-check and compile steps pass successfully.
+- (none)
 
 ## Architecture Decisions
 - Add decisions that affect the system design or data model.
@@ -95,5 +102,51 @@ Update this file whenever the current phase, active feature, or implementation s
     - Added the basic custom node renderer for visible bordered rectangle nodes with centered labels.
 - Themed the canvas MiniMap in `components/editor/canvas-flow.tsx`:
     - Set the preview background, border, and viewport mask to dark UI tokens.
-    - Mirrored canvas node fill colors in the MiniMap node previews.
+    - Used each canvas node's vivid primary text color for MiniMap node previews.
     - Verified with `npx tsc --noEmit`; `npm run build` still reaches the known Next.js/Clerk prerender failure after compile and TypeScript.
+- Implemented Node Shape Rendering (feature-specs/13-node-shape.md):
+    - Added shared shape rendering for placed canvas nodes and drag previews.
+    - Rendered rectangle, pill, and circle with CSS; rendered diamond, hexagon, and cylinder with scaling inline SVG.
+    - Added a cursor-following drag preview that uses the same shape type and default dimensions as the dropped node.
+    - Fixed the existing `app/global-error.tsx` prop destructuring issue that blocked `npx tsc --noEmit`.
+    - Verified `npx tsc --noEmit` and targeted Biome checks pass; `npm run build` compiles and completes TypeScript, then still fails at the known Next.js/Clerk prerender issue.
+- Improved canvas connection ergonomics by making the top, right, bottom, and left node handles connectable in either direction through React Flow loose connection mode.
+- Added stable per-side handle IDs and increased the connection radius so users can land edges on their intended side more reliably.
+- Implemented Node Editing (feature-specs/14-node-editing.md):
+    - Added React Flow `NodeResizer` controls that appear on selected custom nodes and enforce minimum node dimensions.
+    - Added double-click inline label editing with an overlaid textarea, centered placeholder text for empty labels, and blur/Escape close behavior.
+    - Routed typed label changes through `onNodesChange` replace updates so labels stay connected to the existing Liveblocks-backed canvas state.
+    - Refined inline label editing so the textarea starts as a single auto-sizing row and remains vertically centered over the resting label while typing.
+    - Verified the resize state path: React Flow `NodeResizer` emits dimensions changes and the Liveblocks React Flow adapter persists node `width`/`height` through `onNodesChange`.
+    - Verified `npx tsc --noEmit` and targeted Biome checks pass; `npm run build` compiles and completes TypeScript, then still fails at the known Next.js/Clerk `/_global-error` prerender issue.
+- Implemented Nodes Color Toolbar (feature-specs/15-nodes-color-toolbar.md):
+    - Added a compact floating swatch toolbar above selected custom nodes.
+    - Reused `NODE_COLORS` from `types/canvas.ts` so each swatch applies its paired node fill and text color.
+    - Routed color changes through `onNodesChange` replace updates, keeping color edits in the existing collaborative canvas state with no server calls.
+    - Prevented toolbar pointer interactions from dragging nodes or panning the canvas.
+    - Verified `npx tsc --noEmit` and targeted Biome checks pass; `npm run build` compiles and completes TypeScript, then still fails at the known Next.js/Clerk `/_global-error` prerender issue.
+- Implemented Edge Behavior (feature-specs/16-edge-behavior.md):
+    - Added `CanvasEdge` with smooth-step right-angle routing, rounded visible strokes, larger invisible interaction paths, and selected/hover brightening.
+    - Routed new React Flow connections through a custom `canvas` edge type with arrowheads and default label data.
+    - Added inline edge label editing via `EdgeLabelRenderer` and `getSmoothStepPath` label midpoint coordinates.
+    - Routed edge label updates through `onEdgesChange` replace updates so labels remain in the collaborative Liveblocks edge data flow.
+    - Refined node connection handles to keep the subtle white-dot treatment with a dark border.
+    - Verified `npx tsc --noEmit` and targeted Biome checks pass; `npm run build` compiles and completes TypeScript, then still fails at the known Next.js/Clerk `/_global-error` prerender issue.
+- Resolved the Next.js 16.2.4 `/_global-error` prerender build failure:
+    - Removed `NODE_ENV=development` from `.env.local` and removed `NODE_ENV` from `.env.schema` so `next build` can control its production runtime mode.
+    - Regenerated `env.d.ts` with varlock typegen.
+    - Updated `lib/prisma.ts` to use the runtime-controlled `process.env.NODE_ENV` exception for dev-only singleton caching.
+    - Documented the `NODE_ENV` exception in `context/code-standards.md`.
+    - Aligned `app/global-error.tsx` with the Next.js 16 `unstable_retry` error-boundary API.
+    - Verified `npx tsc --noEmit`, targeted Biome checks, and `npm run build` pass.
+- Implemented Canvas Ergonomics (feature-specs/17-canvas-ergonomics.md):
+    - Added `CanvasControls` as a bottom-left pill control bar above the shape panel with zoom out, fit view, zoom in, undo, and redo controls.
+    - Wired zoom controls to the existing React Flow instance with short animated viewport transitions.
+    - Wired undo/redo controls to Liveblocks history hooks and disabled unavailable actions with dimmed button states.
+    - Added `hooks/useKeyboardShortcuts.ts` for zoom and history shortcuts, including editable-field guards for inputs, textareas, and contenteditable elements.
+    - Verified `npx tsc --noEmit`, targeted Biome checks, and `npm run build` pass. The first sandboxed build failed because Next.js could not fetch Google font assets; rerunning with network approval passed.
+- Implemented Starter Templates (feature-specs/18-starter-templates.md):
+    - Added `components/editor/starter-templates.ts` with typed microservices, CI/CD pipeline, and event-driven commerce templates using shared canvas types and `NODE_COLORS`.
+    - Added `components/editor/starter-templates-modal.tsx` with scrollable template cards, fixed-size lightweight SVG previews, and import actions.
+    - Added a Templates navbar button and routed imports through `WorkspaceView` into `CanvasFlow`.
+    - Imported templates by removing existing Liveblocks React Flow nodes/edges, adding the selected template snapshot, then fitting the React Flow viewport.

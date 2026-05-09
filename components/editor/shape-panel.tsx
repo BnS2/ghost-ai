@@ -7,6 +7,11 @@ import type { CanvasNodeShape, CanvasShapeDragPayload } from "@/types/canvas";
 
 export const SHAPE_DRAG_MIME_TYPE = "application/x-ghost-ai-shape";
 
+export interface ShapeDragPreviewState extends CanvasShapeDragPayload {
+  x: number;
+  y: number;
+}
+
 interface ShapePanelItem {
   name: CanvasNodeShape;
   icon: LucideIcon;
@@ -23,7 +28,18 @@ const SHAPES: ShapePanelItem[] = [
   { name: "hexagon", icon: Hexagon, width: 120, height: 100 },
 ];
 
-export function ShapePanel() {
+interface ShapePanelProps {
+  onPreviewChange?: (preview: ShapeDragPreviewState | null) => void;
+}
+
+function setTransparentDragImage(event: React.DragEvent<HTMLButtonElement>) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  event.dataTransfer.setDragImage(canvas, 0, 0);
+}
+
+export function ShapePanel({ onPreviewChange }: ShapePanelProps) {
   const onDragStart = (event: React.DragEvent<HTMLButtonElement>, shapeData: ShapePanelItem) => {
     const payload: CanvasShapeDragPayload = {
       shape: shapeData.name,
@@ -32,6 +48,26 @@ export function ShapePanel() {
     };
     event.dataTransfer.setData(SHAPE_DRAG_MIME_TYPE, JSON.stringify(payload));
     event.dataTransfer.effectAllowed = "move";
+    setTransparentDragImage(event);
+    onPreviewChange?.({
+      ...payload,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  const onDrag = (event: React.DragEvent<HTMLButtonElement>, shapeData: ShapePanelItem) => {
+    if (event.clientX === 0 && event.clientY === 0) {
+      return;
+    }
+
+    onPreviewChange?.({
+      shape: shapeData.name,
+      width: shapeData.width,
+      height: shapeData.height,
+      x: event.clientX,
+      y: event.clientY,
+    });
   };
 
   return (
@@ -43,6 +79,8 @@ export function ShapePanel() {
           aria-label={`Drag ${shape.name} shape onto the canvas`}
           className="cursor-grab rounded-xl p-2 text-text-muted transition-colors hover:bg-subtle hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary active:cursor-grabbing"
           draggable
+          onDrag={(event) => onDrag(event, shape)}
+          onDragEnd={() => onPreviewChange?.(null)}
           onDragStart={(event) => onDragStart(event, shape)}
           title={`Drag to add ${shape.name}`}
         >
