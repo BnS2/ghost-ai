@@ -211,38 +211,40 @@ export function ShareDialog({ isOpen, onClose, projectId, isOwner }: ShareDialog
           </div>
 
           {/* Copy Link Section */}
-          <div className="pt-3 border-t border-border-subtle space-y-2">
-            <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">
-              Project Link
-            </h4>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 px-3 py-2 bg-base border border-border-subtle rounded-xl text-[11px] text-text-secondary truncate font-mono">
-                {origin ? `${origin}/editor/${projectId}` : ""}
+          {isOwner && (
+            <div className="pt-3 border-t border-border-subtle space-y-2">
+              <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest">
+                Project Link
+              </h4>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 px-3 py-2 bg-base border border-border-subtle rounded-xl text-[11px] text-text-secondary truncate font-mono">
+                  {origin ? `${origin}/editor/${projectId}` : ""}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyLink}
+                  className={cn(
+                    "h-9 px-4 rounded-xl border-border-subtle bg-surface/50 hover:bg-surface hover:text-text-primary transition-all shrink-0",
+                    copied &&
+                      "border-state-success text-state-success hover:border-state-success hover:text-state-success",
+                  )}
+                >
+                  {copied ? (
+                    <>
+                      <CheckIcon className="h-3.5 w-3.5 mr-2" />{" "}
+                      <span className="text-xs font-bold tracking-tight">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <CopyIcon className="h-3.5 w-3.5 mr-2" />{" "}
+                      <span className="text-xs font-bold tracking-tight">Copy Link</span>
+                    </>
+                  )}
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyLink}
-                className={cn(
-                  "h-9 px-4 rounded-xl border-border-subtle bg-surface/50 hover:bg-surface hover:text-text-primary transition-all shrink-0",
-                  copied &&
-                    "border-state-success text-state-success hover:border-state-success hover:text-state-success",
-                )}
-              >
-                {copied ? (
-                  <>
-                    <CheckIcon className="h-3.5 w-3.5 mr-2" />{" "}
-                    <span className="text-xs font-bold tracking-tight">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <CopyIcon className="h-3.5 w-3.5 mr-2" />{" "}
-                    <span className="text-xs font-bold tracking-tight">Copy Link</span>
-                  </>
-                )}
-              </Button>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

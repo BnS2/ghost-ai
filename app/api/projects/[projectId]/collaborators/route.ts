@@ -1,5 +1,6 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { Prisma } from "@/app/generated/prisma";
 import { db, type PrismaClient } from "@/lib/prisma";
 import { getIdentity } from "@/lib/project-access";
 
@@ -16,6 +17,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ project
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
+  const normalizedEmail = identity.email?.toLowerCase();
+
   try {
     const projectDb = db as PrismaClient;
 
@@ -25,7 +28,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ project
         id: projectId,
         OR: [
           { ownerId: userId },
-          ...(identity.email ? [{ collaborators: { some: { email: identity.email } } }] : []),
+          ...(normalizedEmail ? [{ collaborators: { some: { email: normalizedEmail } } }] : []),
         ],
       },
       include: {
@@ -123,28 +126,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ project
       return new NextResponse("Invalid email format", { status: 400 });
     }
 
-    // Check if already a collaborator
-    const existing = await projectDb.projectCollaborator.findUnique({
-      where: {
-        projectId_email: {
+    try {
+      const collaborator = await projectDb.projectCollaborator.create({
+        data: {
           projectId,
           email,
         },
-      },
-    });
+      });
 
-    if (existing) {
-      return new NextResponse("Collaborator already exists", { status: 400 });
+      return NextResponse.json(collaborator, { status: 201 });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        return new NextResponse("Collaborator already exists", { status: 409 });
+      }
+      throw error;
     }
-
-    const collaborator = await projectDb.projectCollaborator.create({
-      data: {
-        projectId,
-        email,
-      },
-    });
-
-    return NextResponse.json(collaborator, { status: 201 });
   } catch (error) {
     console.error("[COLLABORATORS_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });

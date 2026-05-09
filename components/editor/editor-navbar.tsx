@@ -61,7 +61,7 @@ export function EditorNavbar({
             variant="outline"
             size="sm"
             onClick={onShare}
-            className="h-8 gap-2 px-4 rounded-full bg-surface/50 border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface transition-all hidden sm:flex"
+            className="h-8 gap-2 px-4 rounded-full bg-surface/50 border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface transition-all flex"
           >
             <Share2Icon className="h-4 w-4" />
             <span className="text-xs font-bold">Share</span>

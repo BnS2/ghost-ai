@@ -39,7 +39,7 @@ Do not add a local user table
 
 - share dialog opens from the workspace
 - owners can invite and remove collaborators
-- colalborators see read-only access
+- collaborators see read-only access
 - collaborator names/avatars load from Clerk when available
 - `npm run build` passes
 

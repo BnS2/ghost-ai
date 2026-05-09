@@ -9,7 +9,13 @@ export async function DELETE(
 ) {
   const { userId } = await auth();
   const { projectId, email: encodedEmail } = await params;
-  const email = decodeURIComponent(encodedEmail).toLowerCase();
+  let email: string;
+
+  try {
+    email = decodeURIComponent(encodedEmail).toLowerCase();
+  } catch {
+    return new NextResponse("Invalid email", { status: 400 });
+  }
 
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
