@@ -20,6 +20,14 @@ export default async function WorkspacePage({
   }
 
   const { owned, shared } = await getProjects();
+  const isOwner = project.ownerId === identity.userId;
 
-  return <WorkspaceView project={project} ownedProjects={owned} sharedProjects={shared} />;
+  return (
+    <WorkspaceView
+      project={project}
+      ownedProjects={owned}
+      sharedProjects={shared}
+      isOwner={isOwner}
+    />
+  );
 }
