@@ -4,6 +4,8 @@ import { Prisma } from "@/app/generated/prisma";
 import { db, type PrismaClient } from "@/lib/prisma";
 import { getIdentity } from "@/lib/project-access";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: Request, { params }: { params: Promise<{ projectId: string }> }) {
   const { userId } = await auth();
   const { projectId } = await params;

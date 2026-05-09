@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
@@ -87,31 +88,7 @@ export function WorkspaceView({
 
         {/* Central Canvas Area */}
         <main className="flex-1 relative bg-canvas-bg overflow-hidden flex flex-col">
-          <div className="flex-1 flex items-center justify-center relative">
-            {/* Grid Pattern Placeholder */}
-            <div
-              className="absolute inset-0 opacity-[0.03] pointer-events-none"
-              style={{
-                backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-                backgroundSize: "24px 24px",
-              }}
-            />
-
-            <div className="z-10 text-center space-y-6 max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center mx-auto border border-accent/20">
-                <div className="w-8 h-8 bg-accent rounded-full animate-pulse" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-text-primary tracking-tight">
-                  Canvas Ready
-                </h2>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  The workspace is initialized. Interactive node-based editing and Liveblocks
-                  collaboration will be implemented in the next phase.
-                </p>
-              </div>
-            </div>
-          </div>
+          <CanvasWrapper projectId={project.id} />
         </main>
 
         {/* Right Sidebar Placeholder (AI Chat) */}

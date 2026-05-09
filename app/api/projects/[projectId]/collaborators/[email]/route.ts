@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@/app/generated/prisma";
 import { db, type PrismaClient } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ projectId: string; email: string }> },
