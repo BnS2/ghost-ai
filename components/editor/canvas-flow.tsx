@@ -186,11 +186,7 @@ export function CanvasFlow({
   }, [onEdgesChange, onNodesChange, templateImport]);
 
   useEffect(() => {
-    if (
-      !templateImport ||
-      !isInitialized ||
-      fitViewAppliedRef.current === templateImport.id
-    ) {
+    if (!templateImport || !isInitialized || fitViewAppliedRef.current === templateImport.id) {
       return;
     }
 
