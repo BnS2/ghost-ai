@@ -67,3 +67,9 @@ Update this file whenever the current phase, active feature, or implementation s
     - Updated `EditorNavbar` with project name display and share/AI actions.
     - Updated `ProjectSidebar` to support active project highlighting.
     - Refactored `app/editor/[projectId]` to use Server Component access checks and the full-viewport shell layout.
+- Implemented Share Dialog (feature-specs/09-share-dialog.md):
+    - Created `app/api/projects/[projectId]/collaborators` routes for listing, inviting, and removing.
+    - Integrated Clerk Backend API for user data enrichment (names, avatars).
+    - Created `components/editor/share-dialog.tsx` with rich aesthetics and access control.
+    - Wired "Share" button in `EditorNavbar` and managed state in `WorkspaceView`.
+    - Handled "Copy Link" with temporary feedback and enforced ownership server-side.

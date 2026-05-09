@@ -12,14 +12,16 @@ interface EditorNavbarProps {
   projectName?: string;
   isAiSidebarOpen?: boolean;
   onToggleAiSidebar?: () => void;
+  onShare?: () => void;
 }
 
 export function EditorNavbar({
   isSidebarOpen,
   onToggleSidebar,
-  projectName = "Untitled Project",
+  projectName,
   isAiSidebarOpen = false,
   onToggleAiSidebar,
+  onShare,
 }: EditorNavbarProps) {
   return (
     <header className="h-14 border-b border-border-subtle bg-base flex items-center justify-between px-4 sticky top-0 z-50">
@@ -47,19 +49,24 @@ export function EditorNavbar({
           >
             Ghost AI
           </Link>
-          <div className="text-sm font-medium text-text-primary truncate">{projectName}</div>
+          {projectName && (
+            <div className="text-sm font-medium text-text-primary truncate">{projectName}</div>
+          )}
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-2 px-4 rounded-full bg-surface/50 border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface transition-all hidden sm:flex"
-        >
-          <Share2Icon className="h-4 w-4" />
-          <span className="text-xs font-bold">Share</span>
-        </Button>
+        {onShare && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onShare}
+            className="h-8 gap-2 px-4 rounded-full bg-surface/50 border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface transition-all hidden sm:flex"
+          >
+            <Share2Icon className="h-4 w-4" />
+            <span className="text-xs font-bold">Share</span>
+          </Button>
+        )}
         {onToggleAiSidebar && (
           <Button
             variant="ghost"

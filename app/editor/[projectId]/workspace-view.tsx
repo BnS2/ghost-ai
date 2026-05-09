@@ -4,17 +4,24 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
+import { ShareDialog } from "@/components/editor/share-dialog";
 import type { Project } from "@/components/editor/use-project-dialogs";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import { cn } from "@/lib/utils";
 
 interface WorkspaceViewProps {
-  project: { id: string; name: string };
+  project: { id: string; name: string; ownerId: string };
   ownedProjects: Project[];
   sharedProjects: Project[];
+  isOwner: boolean;
 }
 
-export function WorkspaceView({ project, ownedProjects, sharedProjects }: WorkspaceViewProps) {
+export function WorkspaceView({
+  project,
+  ownedProjects,
+  sharedProjects,
+  isOwner,
+}: WorkspaceViewProps) {
   const subscribe = useCallback((callback: () => void) => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
     mediaQuery.addEventListener("change", callback);
@@ -28,6 +35,7 @@ export function WorkspaceView({ project, ownedProjects, sharedProjects }: Worksp
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAiSidebarOpenInternal, setIsAiSidebarOpenInternal] = useState<boolean | null>(null);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   // Derived state: Use internal override if set, otherwise follow isDesktop
   const isAiSidebarOpen = isAiSidebarOpenInternal ?? isDesktop;
@@ -61,6 +69,7 @@ export function WorkspaceView({ project, ownedProjects, sharedProjects }: Worksp
         projectName={project.name}
         isAiSidebarOpen={isAiSidebarOpen}
         onToggleAiSidebar={toggleAiSidebar}
+        onShare={() => setIsShareDialogOpen(true)}
       />
 
       <div className="flex-1 flex overflow-hidden relative">
@@ -137,6 +146,12 @@ export function WorkspaceView({ project, ownedProjects, sharedProjects }: Worksp
         onCreate={handleCreate}
         onRename={handleRename}
         onDelete={handleDelete}
+      />
+      <ShareDialog
+        isOpen={isShareDialogOpen}
+        onClose={() => setIsShareDialogOpen(false)}
+        projectId={project.id}
+        isOwner={isOwner}
       />
     </div>
   );
