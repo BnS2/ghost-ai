@@ -24,12 +24,16 @@ Update this file whenever the current phase, active feature, or implementation s
     - Conditionalized AI toggle button in `editor-navbar.tsx`.
     - Made project sidebar tabs controlled to prevent stale UI in `project-sidebar.tsx`.
     - Hardened identity retrieval and primary email resolution in `lib/project-access.ts`.
+- Implemented Liveblocks Setup (feature-specs/10-liveblocks-setup.md). Configured `liveblocks.config.ts`, added a proper cached Liveblocks node client in `lib/liveblocks.ts`, and implemented the `/api/liveblocks-auth` route with project access checks.
+- Implemented Base Canvas (feature-specs/11-base-canvas.md). Created `types/canvas.ts` with `canvasNode`/`canvasEdge` types and `CanvasNodeData`. Created `components/editor/canvas-wrapper.tsx` with `LiveblocksProvider`, `RoomProvider`, `ClientSideSuspense`, and class-based ErrorBoundary. Created `components/editor/canvas-flow.tsx` using `useLiveblocksFlow` (suspense mode) wired to `ReactFlow` with `ConnectionMode.Loose`, `fitView`, `MiniMap`, and dot-pattern `Background`. Replaced the canvas placeholder in `workspace-view.tsx` with `<CanvasWrapper>`.
+- Implemented Shape Panel (feature-specs/12-shape-panel.md). Added the floating bottom shape toolbar, shape drag payloads, drop-to-create custom canvas nodes, and basic bordered rectangle node rendering.
+- Themed the React Flow MiniMap to match the dark editor UI, including token-based surface, border, viewport mask, and node preview colors.
 
 ## In Progress
-- Canvas foundation and node-based editing.
+- (none — next: shape-specific node visuals or canvas persistence)
 
 ## Open Questions
-- Add unresolved product or implementation questions here.
+- Next.js 16.2.4 build fails on `/_global-error` prerendering with `TypeError: Cannot read properties of null (reading 'useContext')`. This is a known Next.js/Clerk version interaction issue unrelated to recent code changes. TypeScript type-check and compile steps pass successfully.
 
 ## Architecture Decisions
 - Add decisions that affect the system design or data model.
@@ -73,3 +77,23 @@ Update this file whenever the current phase, active feature, or implementation s
     - Created `components/editor/share-dialog.tsx` with rich aesthetics and access control.
     - Wired "Share" button in `EditorNavbar` and managed state in `WorkspaceView`.
     - Handled "Copy Link" with temporary feedback and enforced ownership server-side.
+- Implemented Liveblocks Setup (feature-specs/10-liveblocks-setup.md):
+    - Configured `liveblocks.config.ts` with `Presence` (cursor, isThinking) and `UserMeta`.
+    - Finalized the cached `@liveblocks/node` client in `lib/liveblocks.ts` using the global caching pattern to prevent hot-reload memory leaks.
+    - Created `POST /api/liveblocks-auth` to securely generate Liveblocks session tokens using project access verification.
+    - Added `export const dynamic = "force-dynamic";` to `/api/projects/[projectId]/collaborators` routes to prevent Next.js from attempting static generation on authenticated routes.
+- Implemented Base Canvas (feature-specs/11-base-canvas.md):
+    - Added `types/canvas.ts` with `CanvasNodeData`, `canvasNode`, and `canvasEdge` types.
+    - Created `components/editor/canvas-wrapper.tsx`: wraps the Liveblocks `LiveblocksProvider` + `RoomProvider` with `initialPresence { cursor: null, isThinking: false }`, a `ClientSideSuspense` loading fallback, and a class-based `ErrorBoundary` for connection errors.
+    - Created `components/editor/canvas-flow.tsx`: uses `useLiveblocksFlow<canvasNode, canvasEdge>({ suspense: true })` and renders a `ReactFlow` with `ConnectionMode.Loose`, `fitView`, dot-pattern `Background`, and `MiniMap`.
+    - Replaced the canvas placeholder in `workspace-view.tsx` with `<CanvasWrapper projectId={project.id} />`.
+    - `npm run build` TypeScript and compile steps pass cleanly.
+- Implemented Shape Panel (feature-specs/12-shape-panel.md):
+    - Added central canvas shape, color, and drag payload contracts.
+    - Added a floating bottom shape panel with draggable rectangle, diamond, circle, pill, cylinder, and hexagon buttons.
+    - Wired React Flow dragover/drop handling to create custom nodes from the drag payload using screen-to-canvas coordinate conversion.
+    - Added the basic custom node renderer for visible bordered rectangle nodes with centered labels.
+- Themed the canvas MiniMap in `components/editor/canvas-flow.tsx`:
+    - Set the preview background, border, and viewport mask to dark UI tokens.
+    - Mirrored canvas node fill colors in the MiniMap node previews.
+    - Verified with `npx tsc --noEmit`; `npm run build` still reaches the known Next.js/Clerk prerender failure after compile and TypeScript.
