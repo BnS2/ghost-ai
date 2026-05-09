@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import { getUserColor, liveblocks } from "@/lib/liveblocks";
 import { checkProjectAccess } from "@/lib/project-access";
-import { liveblocks, getUserColor } from "@/lib/liveblocks";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,9 @@ export async function POST(request: Request) {
 
     const primaryEmailId = user.primaryEmailAddressId;
     const email = user.emailAddresses.find((e) => e.id === primaryEmailId)?.emailAddress;
-    const name = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : email || "Anonymous";
+    const name = user.firstName
+      ? `${user.firstName} ${user.lastName || ""}`.trim()
+      : email || "Anonymous";
 
     // Ensure room exists
     const roomExists = await liveblocks.getRoom(room).catch(() => null);
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
     session.allow(room, session.FULL_ACCESS);
 
     const { status, body } = await session.authorize();
-    
+
     return new NextResponse(body, { status });
   } catch (error) {
     console.error("Liveblocks auth error:", error);
