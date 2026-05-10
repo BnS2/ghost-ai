@@ -24,6 +24,11 @@ export function useKeyboardShortcuts<NodeType extends Node, EdgeType extends Edg
   reactFlow: ReactFlowInstance<NodeType, EdgeType>,
   undo: () => void,
   redo: () => void,
+  clipboardActions?: {
+    copy: () => boolean;
+    duplicate: () => boolean;
+    paste: () => boolean;
+  },
 ) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -32,6 +37,30 @@ export function useKeyboardShortcuts<NodeType extends Node, EdgeType extends Edg
       }
 
       const isModifierPressed = event.metaKey || event.ctrlKey;
+
+      if (isModifierPressed && !event.shiftKey && event.key.toLowerCase() === "c") {
+        if (clipboardActions?.copy()) {
+          event.preventDefault();
+        }
+
+        return;
+      }
+
+      if (isModifierPressed && !event.shiftKey && event.key.toLowerCase() === "v") {
+        if (clipboardActions?.paste()) {
+          event.preventDefault();
+        }
+
+        return;
+      }
+
+      if (isModifierPressed && !event.shiftKey && event.key.toLowerCase() === "d") {
+        if (clipboardActions?.duplicate()) {
+          event.preventDefault();
+        }
+
+        return;
+      }
 
       if (isModifierPressed && event.key.toLowerCase() === "z") {
         event.preventDefault();
@@ -68,5 +97,5 @@ export function useKeyboardShortcuts<NodeType extends Node, EdgeType extends Edg
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [reactFlow, redo, undo]);
+  }, [clipboardActions, reactFlow, redo, undo]);
 }

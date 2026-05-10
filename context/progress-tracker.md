@@ -38,6 +38,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Remediated canvas accessibility and timing findings: normalized edge label draft sync without `flushSync`, made edge labels the single keyboard-accessible edit control, labeled the compact Templates navbar button, and moved template import viewport fitting to React Flow node initialization.
 - Removed redundant edge draft-label sync effect so edge editing no longer calls React state setters synchronously inside an effect.
 - Implemented Canvas Ergonomics Deletion Patch (feature-specs/17.5-canvas-ergonomics-deletion.md). Added explicit Backspace/Delete keyboard deletion, click-drag box selection, a selected-node trash action, and a bottom "Delete selected" control that appears only when elements are selected, routed through React Flow's Liveblocks-backed deletion path.
+- Implemented Canvas Ergonomics Copy/Duplicate Patch (feature-specs/17.6-canvas-ergonomics-copy-duplicate.md). Added selected-node copy, paste, and duplicate shortcuts; visible copy/duplicate toolbar actions for single-node selections; offset pasted placement; multi-node relative positioning; internal edge duplication with new IDs; editable-field shortcut guards; and Liveblocks-backed node/edge insertion.
 
 ## In Progress
 - (none — next: canvas persistence)
@@ -49,6 +50,16 @@ Update this file whenever the current phase, active feature, or implementation s
 - Add decisions that affect the system design or data model.
 
 ## Session Notes
+- Added Canvas Ergonomics Copy/Duplicate spec (feature-specs/17.6-canvas-ergonomics-copy-duplicate.md):
+    - Defines familiar `Cmd/Ctrl + C`, `Cmd/Ctrl + V`, and `Cmd/Ctrl + D` canvas reuse behavior.
+    - Covers visible copy/duplicate toolbar actions, offset pasted placement, new element IDs, multi-node relative positioning, selected-internal edge duplication, editable-field shortcut guards, and Liveblocks-backed undo/redo expectations.
+- Implemented Canvas Ergonomics Copy/Duplicate Patch (feature-specs/17.6-canvas-ergonomics-copy-duplicate.md):
+    - Added an in-memory canvas clipboard in `CanvasFlow`, with selection-aware copy, offset paste, duplicate, ID remapping, selection transfer to newly inserted nodes, and internal edge recreation.
+    - Added `Cmd/Ctrl + C`, `Cmd/Ctrl + V`, and `Cmd/Ctrl + D` handling to `useKeyboardShortcuts`, reusing the existing editable-field guard.
+    - Added copy and duplicate icon actions to the selected node toolbar.
+    - Hid the per-node selected toolbar when multiple nodes are selected so repeated color/copy/duplicate/delete controls do not clutter multi-select.
+    - Verified `npx tsc --noEmit` and targeted `npx biome check components/editor/canvas-flow.tsx components/editor/canvas-node.tsx hooks/useKeyboardShortcuts.ts` pass.
+    - Verified `npm run build` passes after allowing `next/font` to fetch Google font assets.
 - Completed Editor Home and Project Dialogs implementation.
 - Wired sidebar actions (Rename, Delete) and New Project button.
 - Implemented slug preview logic in Create Project dialog.
