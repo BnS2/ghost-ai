@@ -7,7 +7,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Phase 1: Foundation
 
 ## Current Goal
-- Canvas persistence.
+- Canvas persistence complete; next feature unit pending.
 
 ## Completed
 - Project context and architecture definition.
@@ -42,9 +42,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented Presence Avatars and Cursors (feature-specs/19-presence-avatars-cursors.md). Added a canvas-scoped participant avatar group, filtered Liveblocks collaborators to exclude the current Clerk user, rendered the current user as a static Clerk-profile avatar image, and added Liveblocks-backed live cursors for other participants.
 - Implemented AI Sidebar Shell (feature-specs/20-ai-sidebar-shell.md). Extracted the AI workspace sidebar into its own controlled component, added the header, AI Architect and Specs tabs, chat empty state with starter prompts, local prompt composer behavior, and static spec generation/demo card UI.
 - Remediated AI Sidebar accessibility and composer findings: closed sidebar state now applies `aria-hidden` and `inert`, and the prompt textarea now resizes from its minimum height up to the configured maximum while preserving send-key behavior.
+- Implemented Canvas Autosave and Load (feature-specs/21-canvas-autosave.md). Added Vercel Blob persistence routes, debounced client autosave, empty-room Blob hydration, and editor save status feedback.
+- Adjusted Canvas Autosave UX: increased debounce from 1200ms to 2000ms and added a clickable manual save button in the navbar that triggers an immediate save.
 
 ## In Progress
-- (none — next: canvas persistence)
+- (none — next feature unit pending)
 
 ## Open Questions
 - (none)
@@ -53,6 +55,18 @@ Update this file whenever the current phase, active feature, or implementation s
 - Add decisions that affect the system design or data model.
 
 ## Session Notes
+- Implemented Canvas Autosave and Load (feature-specs/21-canvas-autosave.md):
+    - Installed `@vercel/blob`.
+    - Reused the existing `Project.canvasJsonPath` Prisma field for the saved canvas blob URL.
+    - Added `GET` and `PUT` handlers at `/api/projects/[projectId]/canvas` with Clerk auth, project access checks, canvas payload validation, Vercel Blob JSON storage, and Prisma metadata updates.
+    - Added `lib/canvas-snapshot.ts` as the shared typed canvas snapshot parser for API and client response validation.
+    - Added `hooks/use-canvas-autosave.ts` to debounce Liveblocks React Flow node/edge saves and report `idle`, `saving`, `saved`, and `error` states.
+    - Loaded saved Blob canvas state only after React Flow initialization and only when the active Liveblocks room has no nodes or edges.
+    - Added a compact navbar save status indicator so the editor shows saving, saved, and error states.
+    - Verified `npx tsc --noEmit`, targeted `npx biome check`, and `npm run build` pass. The first sandboxed build failed because Next.js could not fetch Google font assets; rerunning with network approval passed.
+- Remediated Canvas Autosave save-state issues:
+    - Changed the first enabled autosave pass so non-empty canvas state is persisted instead of being marked saved without a network write.
+    - Switched canvas Blob objects to private access and disabled Blob read caching for saved canvas loads.
 - Added Canvas Ergonomics Copy/Duplicate spec (feature-specs/17.6-canvas-ergonomics-copy-duplicate.md):
     - Defines familiar `Cmd/Ctrl + C`, `Cmd/Ctrl + V`, and `Cmd/Ctrl + D` canvas reuse behavior.
     - Covers visible copy/duplicate toolbar actions, offset pasted placement, new element IDs, multi-node relative positioning, selected-internal edge duplication, editable-field shortcut guards, and Liveblocks-backed undo/redo expectations.

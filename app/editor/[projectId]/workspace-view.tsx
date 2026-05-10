@@ -10,6 +10,7 @@ import { ShareDialog } from "@/components/editor/share-dialog";
 import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
 import type { Project } from "@/components/editor/use-project-dialogs";
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { useProjectActions } from "@/hooks/use-project-actions";
 
 interface WorkspaceViewProps {
@@ -40,6 +41,8 @@ export function WorkspaceView({
   const [isAiSidebarOpenInternal, setIsAiSidebarOpenInternal] = useState<boolean | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<CanvasSaveStatus>("idle");
+  const saveRef = useRef<(() => void) | null>(null);
   const [templateImport, setTemplateImport] = useState<{
     id: number;
     template: CanvasTemplate;
@@ -80,6 +83,8 @@ export function WorkspaceView({
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         projectName={project.name}
+        saveStatus={saveStatus}
+        onSave={() => saveRef.current?.()}
         isAiSidebarOpen={isAiSidebarOpen}
         onOpenTemplates={() => setIsTemplatesModalOpen(true)}
         onToggleAiSidebar={toggleAiSidebar}
@@ -103,6 +108,8 @@ export function WorkspaceView({
         <main className="flex-1 relative bg-canvas-bg overflow-hidden flex flex-col">
           <CanvasWrapper
             projectId={project.id}
+            onSaveStatusChange={setSaveStatus}
+            saveRef={saveRef}
             onTemplateImported={() => setTemplateImport(null)}
             templateImport={templateImport}
           />

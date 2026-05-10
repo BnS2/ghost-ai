@@ -2,7 +2,9 @@
 
 import { ClientSideSuspense, LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense";
 import { ReactFlowProvider } from "@xyflow/react";
+import type React from "react";
 import { Component, type ReactNode, useCallback, useState } from "react";
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { CanvasFlow } from "./canvas-flow";
 import { NodeShape } from "./node-shape";
 import { PresenceAvatarGroup } from "./presence-avatar-group";
@@ -31,7 +33,9 @@ class ErrorBoundary extends Component<
 }
 
 interface CanvasWrapperProps {
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
   projectId: string;
+  saveRef?: React.MutableRefObject<(() => void) | null>;
   onTemplateImported?: () => void;
   templateImport?: {
     id: number;
@@ -40,7 +44,9 @@ interface CanvasWrapperProps {
 }
 
 export function CanvasWrapper({
+  onSaveStatusChange,
   projectId,
+  saveRef,
   onTemplateImported,
   templateImport,
 }: CanvasWrapperProps) {
@@ -91,7 +97,10 @@ export function CanvasWrapper({
                 <CanvasFlow
                   onPreviewClear={clearShapePreview}
                   onPreviewMove={moveShapePreview}
+                  onSaveStatusChange={onSaveStatusChange}
                   onTemplateImported={onTemplateImported}
+                  projectId={projectId}
+                  saveRef={saveRef}
                   templateImport={templateImport}
                 />
                 <PresenceAvatarGroup />

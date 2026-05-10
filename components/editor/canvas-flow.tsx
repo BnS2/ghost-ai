@@ -30,7 +30,9 @@ import {
 import "@xyflow/react/dist/style.css";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type CanvasSaveStatus, useCanvasAutosave } from "@/hooks/use-canvas-autosave";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { parseCanvasSnapshot } from "@/lib/canvas-snapshot";
 import {
   type CanvasShapeDragPayload,
   type canvasEdge,
@@ -71,7 +73,10 @@ const DEFAULT_CANVAS_EDGE_OPTIONS = {
 interface CanvasFlowProps {
   onPreviewClear?: () => void;
   onPreviewMove?: (position: { x: number; y: number }) => void;
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void;
   onTemplateImported?: () => void;
+  projectId: string;
+  saveRef?: React.MutableRefObject<(() => void) | null>;
   templateImport?: {
     id: number;
     template: CanvasTemplate;
@@ -151,7 +156,10 @@ function cloneClipboardEdge(edge: canvasEdge): canvasEdge {
 export function CanvasFlow({
   onPreviewClear,
   onPreviewMove,
+  onSaveStatusChange,
   onTemplateImported,
+  projectId,
+  saveRef,
   templateImport,
 }: CanvasFlowProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onDelete } = useLiveblocksFlow<
@@ -175,8 +183,13 @@ export function CanvasFlow({
   const clipboardRef = useRef<CanvasClipboard | null>(null);
   const [selectedElementCount, setSelectedElementCount] = useState(0);
   const [selectedNodeCount, setSelectedNodeCount] = useState(0);
+  const [isSavedCanvasChecked, setIsSavedCanvasChecked] = useState(false);
   const lastTemplateImportIdRef = useRef<number | null>(null);
   const fitViewAppliedRef = useRef<number | null>(null);
+  const savedCanvasCheckStartedRef = useRef(false);
+  const { save, status: saveStatus } = useCanvasAutosave(projectId, nodes, edges, {
+    enabled: isSavedCanvasChecked,
+  });
   const miniMapNodeColor = useCallback(
     (node: canvasNode) => node.data.textColor ?? DEFAULT_NODE_COLOR.text,
     [],
@@ -329,6 +342,91 @@ export function CanvasFlow({
   useEffect(() => {
     edgesRef.current = edges;
   }, [edges]);
+
+  useEffect(() => {
+    onSaveStatusChange?.(saveStatus);
+  }, [onSaveStatusChange, saveStatus]);
+
+  useEffect(() => {
+    if (saveRef) {
+      saveRef.current = save;
+    }
+    return () => {
+      if (saveRef) {
+        saveRef.current = null;
+      }
+    };
+  }, [save, saveRef]);
+
+  useEffect(() => {
+    if (!isInitialized || savedCanvasCheckStartedRef.current) {
+      return;
+    }
+
+    savedCanvasCheckStartedRef.current = true;
+
+    if (nodesRef.current.length > 0 || edgesRef.current.length > 0) {
+      setIsSavedCanvasChecked(true);
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    fetch(`/api/projects/${projectId}/canvas`, {
+      cache: "no-store",
+      signal: abortController.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Canvas load failed with ${response.status}`);
+        }
+
+        const payload: unknown = await response.json();
+
+        if (
+          !payload ||
+          typeof payload !== "object" ||
+          !("canvas" in payload) ||
+          payload.canvas === null
+        ) {
+          return;
+        }
+
+        const canvas = parseCanvasSnapshot(payload.canvas);
+
+        if (!canvas) {
+          throw new Error("Saved canvas response was invalid");
+        }
+
+        if (nodesRef.current.length > 0 || edgesRef.current.length > 0) {
+          return;
+        }
+
+        if (canvas.edges.length > 0) {
+          onEdgesChange(canvas.edges.map((edge) => ({ item: edge, type: "add" as const })));
+        }
+
+        if (canvas.nodes.length > 0) {
+          onNodesChange(canvas.nodes.map((node) => ({ item: node, type: "add" as const })));
+        }
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        console.error("Failed to load saved canvas", error);
+      })
+      .finally(() => {
+        window.requestAnimationFrame(() => {
+          setIsSavedCanvasChecked(true);
+        });
+      });
+
+    return () => {
+      abortController.abort();
+    };
+  }, [isInitialized, onEdgesChange, onNodesChange, projectId]);
 
   useEffect(() => {
     if (!templateImport || lastTemplateImportIdRef.current === templateImport.id) {

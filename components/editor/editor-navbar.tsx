@@ -5,17 +5,21 @@ import {
   LayoutTemplateIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
+  SaveIcon,
   Share2Icon,
   SparklesIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { cn } from "@/lib/utils";
 
 interface EditorNavbarProps {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   projectName?: string;
+  saveStatus?: CanvasSaveStatus;
+  onSave?: () => void;
   isAiSidebarOpen?: boolean;
   onOpenTemplates?: () => void;
   onToggleAiSidebar?: () => void;
@@ -26,11 +30,22 @@ export function EditorNavbar({
   isSidebarOpen,
   onToggleSidebar,
   projectName,
+  saveStatus = "idle",
+  onSave,
   isAiSidebarOpen = false,
   onOpenTemplates,
   onToggleAiSidebar,
   onShare,
 }: EditorNavbarProps) {
+  const saveStatusLabel =
+    saveStatus === "saving"
+      ? "Saving"
+      : saveStatus === "error"
+        ? "Save error"
+        : saveStatus === "saved"
+          ? "Saved"
+          : "Save";
+
   return (
     <header className="h-14 border-b border-border-subtle bg-base flex items-center justify-between px-4 sticky top-0 z-50">
       <div className="flex items-center gap-4 flex-1">
@@ -64,6 +79,21 @@ export function EditorNavbar({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          aria-label={`Canvas ${saveStatusLabel.toLowerCase()}`}
+          aria-live="polite"
+          onClick={onSave}
+          type="button"
+          className={cn(
+            "h-8 gap-2 px-4 rounded-full bg-surface/50 border border-border-subtle text-text-secondary flex items-center cursor-pointer hover:bg-surface transition-colors",
+            saveStatus === "saved" && "text-state-success",
+            saveStatus === "saving" && "text-text-muted",
+            saveStatus === "error" && "text-state-error",
+          )}
+        >
+          <SaveIcon className="h-4 w-4" />
+          <span className="hidden text-xs font-bold sm:inline">{saveStatusLabel}</span>
+        </button>
         {onOpenTemplates && (
           <Button
             variant="outline"
