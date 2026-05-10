@@ -358,6 +358,15 @@ export function CanvasFlow({
     };
   }, [save, saveRef]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: must reset when projectId changes
+  useEffect(() => {
+    const id = setTimeout(() => setIsSavedCanvasChecked(false), 0);
+    savedCanvasCheckStartedRef.current = false;
+    lastTemplateImportIdRef.current = null;
+    fitViewAppliedRef.current = null;
+    return () => clearTimeout(id);
+  }, [projectId]);
+
   useEffect(() => {
     if (!isInitialized || savedCanvasCheckStartedRef.current) {
       return;

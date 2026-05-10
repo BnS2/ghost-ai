@@ -43,7 +43,11 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented AI Sidebar Shell (feature-specs/20-ai-sidebar-shell.md). Extracted the AI workspace sidebar into its own controlled component, added the header, AI Architect and Specs tabs, chat empty state with starter prompts, local prompt composer behavior, and static spec generation/demo card UI.
 - Remediated AI Sidebar accessibility and composer findings: closed sidebar state now applies `aria-hidden` and `inert`, and the prompt textarea now resizes from its minimum height up to the configured maximum while preserving send-key behavior.
 - Implemented Canvas Autosave and Load (feature-specs/21-canvas-autosave.md). Added Vercel Blob persistence routes, debounced client autosave, empty-room Blob hydration, and editor save status feedback.
-- Adjusted Canvas Autosave UX: increased debounce from 1200ms to 2000ms and added a clickable manual save button in the navbar that triggers an immediate save.
+- Adjusted Canvas Autosave UX: increased debounce from 1200ms to 2000ms, exposed a manual `save()` function from `useCanvasAutosave`, threaded it through `CanvasFlow` → `CanvasWrapper` via a `saveRef`, made the navbar save pill a clickable `<button>` that triggers an immediate save, and set status to `idle` ("Save") immediately when unsaved changes are detected.
+- Remediated CodeRabbit autosave/project-change findings:
+    - `canvas-flow.tsx`: added `useEffect([projectId])` that resets `isSavedCanvasChecked`, `savedCanvasCheckStartedRef`, `lastTemplateImportIdRef`, and `fitViewAppliedRef` so a reused `CanvasFlow` resets its hydration/autosave guards on project switch.
+    - `workspace-view.tsx`: added `useEffect([project.id])` that resets `saveStatus` to `"idle"` and `saveRef.current` to `null` on project change, preventing stale save state.
+    - Skipped: ETag/version precondition on canvas PUT (debounce-clearing pattern + up-to-date refs prevent out-of-order writes) and `MutableRefObject` → `RefObject` change (the ref is mutated, so `MutableRefObject` is correct; `RefObject` would be a type error).
 
 ## In Progress
 - (none — next feature unit pending)
