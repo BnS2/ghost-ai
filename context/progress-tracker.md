@@ -7,7 +7,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Phase 1: Foundation
 
 ## Current Goal
-- Canvas persistence complete; next feature unit pending.
+- Spec generation frontend wiring complete; next feature unit pending.
 
 ## Completed
 - Project context and architecture definition.
@@ -49,8 +49,23 @@ Update this file whenever the current phase, active feature, or implementation s
     - `workspace-view.tsx`: added `useEffect([project.id])` that resets `saveStatus` to `"idle"` and `saveRef.current` to `null` on project change, preventing stale save state.
     - Skipped: ETag/version precondition on canvas PUT (debounce-clearing pattern + up-to-date refs prevent out-of-order writes) and `MutableRefObject` → `RefObject` change (the ref is mutated, so `MutableRefObject` is correct; `RefObject` would be a type error).
 
+- Design Agent API (feature-specs/22-design-agent-api.md). Wired Trigger.dev backend task, task run tracking via Prisma, and run-scoped token generation routes.
+
 ## In Progress
 - (none — next feature unit pending)
+
+## Completed (continued)
+- Spec UI Integration (feature-specs/29-spec-ui-integration.md). Created `GET /api/projects/[projectId]/specs` list endpoint and added `GET` spec content handler to `[specId]/route.ts`. Installed `react-markdown`. Created `components/editor/spec-preview-modal.tsx` with Markdown rendering, download action, and keyboard support. Replaced the static Specs tab in `ai-sidebar.tsx` with a dynamic spec list featuring loading/empty states, clickable items, and per-item download buttons.
+
+## Completed (continued)
+- AI Chat Functional (feature-specs/26-ai-chat-functional.md). Wired AI sidebar prompt submission to POST /api/ai/design with runId + publicToken response, integrated Trigger.dev useRealtimeRun for run status tracking, disabled chat input and showed spinner during active runs, pushed AI completion/error messages to the ai-chat feed on run end, and displayed a compact AI status strip above the input from AI_STATUS broadcast events.
+
+## Trigger.dev Setup
+- Installed `@trigger.dev/sdk` (v4.4.5) and `@trigger.dev/build`.
+- Created `trigger.config.ts` with `defineConfig`, `"modern"` Prisma 7 extension mode, and `maxDuration: 600`.
+- Created `trigger/index.ts` and `trigger/example.ts` with a `helloWorldTask`.
+- Added `TRIGGER_SECRET_KEY` to `.env.schema` and regenerated `env.d.ts`.
+- Verified `npx tsc --noEmit` and `npm run build` pass.
 
 ## Open Questions
 - (none)
@@ -59,6 +74,31 @@ Update this file whenever the current phase, active feature, or implementation s
 - Add decisions that affect the system design or data model.
 
 ## Session Notes
+- Implemented Spec UI Integration (feature-specs/29-spec-ui-integration.md):
+    - Created `app/api/projects/[projectId]/specs/route.ts` with a `GET` handler that queries `ProjectSpec` records by `projectId`, ordered by `createdAt` descending, with Clerk auth and project access checks.
+    - Added `GET` handler to `app/api/projects/[projectId]/specs/[specId]/route.ts` that fetches spec content from Vercel Blob server-side and returns it as JSON (`{ content: string }`) for preview — no direct Blob access from the client.
+    - Installed `react-markdown` for Markdown rendering in the preview modal.
+    - Created `components/editor/spec-preview-modal.tsx`: a Dialog-based modal that fetches spec content via the new GET endpoint, renders it as styled Markdown (headings, lists, code blocks, tables, blockquotes, inline code, links), provides a download button that triggers the existing download endpoint via a programmatic anchor click, and supports Escape-keyboard-close via Dialog.
+    - Updated `components/editor/ai-sidebar.tsx` to replace the static demo spec card with a dynamic spec list: fetches from `/api/projects/[projectId]/specs` on mount and project change, shows a loading spinner, an empty state with icon and helper text, and compact clickable rows (file icon, filename derived from `specId`, formatted date, and download button). Clicking a row opens the `SpecPreviewModal`.
+    - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` all pass.
+- Implemented AI Chat Functional (feature-specs/26-ai-chat-functional.md):
+    - Updated `POST /api/ai/design` to return `publicToken` alongside `runId` in the response, using the existing Trigger.dev token generation pattern from `/api/ai/design/token`.
+    - Rewired `ai-sidebar.tsx` to submit prompts directly to the design API with `projectId`, read `runId` + `publicToken` from the response, and store them in local state.
+    - Integrated `useRealtimeRun` from `@trigger.dev/react-hooks` to track run status, disable input while active, and show a spinner in the send button.
+    - Added a `useEffect` on run status that pushes a final AI assistant message to the `ai-chat` feed on completion, error, or cancellation, then resets the run state.
+    - Kept `useEventListener` for `AI_STATUS` broadcasts to drive the status text in the compact status strip above the input.
+    - Styled user chat bubbles with green accent (`#62C073`) bg and black text; styled AI chat bubbles with dark elevated bg and primary text.
+    - Styled the submit button with green accent (`#62C073`), dimmed disabled state, and spinner while generating.
+    - Moved the status strip from the top of the chat area to directly above the input, with dark elevated bg, green spinner accent, and secondary text.
+    - Removed `onPromptSubmit` callback prop threading through `CanvasWrapper` and `WorkspaceView`, simplified to just passing `projectId` to `AiSidebar`.
+    - Show API and state errors as assistant messages in the `ai-chat` feed.
+    - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` all pass.
+- Implemented Spec Generation Flow (feature-specs/27-spec-generation-flow.md):
+    - Created `app/api/ai/spec/route.ts` (POST): accepts `roomId`, `chatHistory`, `nodes`, `edges`; authenticates via Clerk; resolves project access from `roomId` using existing `checkProjectAccess`; triggers the `generate-spec` Trigger.dev task; creates a `TaskRun` ownership record; returns the `runId`. Does not trust client-supplied `projectId`.
+    - Created `app/api/ai/spec/token/route.ts` (POST): accepts `runId`; authenticates via Clerk; verifies `TaskRun` belongs to the user; issues a Trigger.dev public access token scoped to the run with 1-hour expiration; returns the token.
+    - Created `trigger/generate-spec.ts`: defines `generateSpec` task with Zod-validated payload (`projectId`, `roomId`, `chatHistory`, `nodes`, `edges`); uses Gemini via `@ai-sdk/google` with `generateText` to produce a structured Markdown technical spec from canvas/chat context; tracks progress through Trigger.dev metadata (`status`, `progress`, `message`); returns `{ spec: text }`.
+    - Exported `generateSpec` from `trigger/index.ts`.
+    - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` all pass.
 - Implemented Canvas Autosave and Load (feature-specs/21-canvas-autosave.md):
     - Installed `@vercel/blob`.
     - Reused the existing `Project.canvasJsonPath` Prisma field for the saved canvas blob URL.
@@ -207,4 +247,39 @@ Update this file whenever the current phase, active feature, or implementation s
     - Added a selected-node trash action in `CanvasNode` that calls React Flow `deleteElements`.
     - Enabled click-drag box selection with partial selection for more forgiving multi-select behavior.
     - Added a bottom canvas control for deleting selected nodes/edges with a visible selected count, shown only while a selection exists.
-    - Kept deletion routed through the existing `useLiveblocksFlow` `onDelete` integration so node/edge removal remains collaborative and undoable.
+     - Kept deletion routed through the existing `useLiveblocksFlow` `onDelete` integration so node/edge removal remains collaborative and undoable.
+- Implemented Design Agent API (feature-specs/22-design-agent-api.md):
+    - Added `TaskRun` model to `prisma/models/task-run.prisma` with `runId` (unique), `projectId`, `userId`, `createdAt`, index on `runId`, and compound index on `userId`/`projectId`.
+    - Created and applied migration `20260510171210_add_task_run`.
+    - Created `trigger/design-agent.ts` with a minimal `designAgentTask` that logs the incoming `prompt` and `roomId` payload.
+    - Exported `designAgentTask` from `trigger/index.ts`.
+    - Created `POST /api/ai/design` route: validates auth, `roomId`/`projectId`/`prompt` payload, project access; triggers the design task via `tasks.trigger`; creates a `TaskRun` record; returns the `runId`.
+    - Created `POST /api/ai/design/token` route: validates auth and `runId` payload; verifies ownership via `TaskRun` record; generates a Trigger.dev public token scoped to the run; returns the token.
+    - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` pass.
+- Implemented Design Agent Logic (feature-specs/23-design-agent-logic.md):
+    - Created `lib/ai-canvas-actions.ts` with Zod-validated canvas action types (`add_node`, `add_edge`, `move_node`, `update_node`, `delete_node`, `delete_edge`), Gemini system prompt with shape/color/layout rules, and prompt builder with current canvas context.
+    - Updated `liveblocks.config.ts` with `RoomEvent` union types for `AI_STATUS` (started/processing/completed/error) and `AI_ACTIONS` broadcasts.
+    - Rewrote `trigger/design-agent.ts` with full Gemini integration via `createGoogleGenerativeAI`, `generateObject` with schema validation, Liveblocks broadcast of status and action events, and graceful error handling with status updates.
+    - Updated `POST /api/ai/design` route to fetch current canvas state from Vercel Blob and pass it to the design task alongside `prompt` and `roomId`.
+    - Added `useEventListener` for `AI_ACTIONS` and `AI_STATUS` in `canvas-flow.tsx` with an `applyAiAction` handler that translates Gemini output into React Flow node/edge mutations (add, remove, replace) through the existing Liveblocks collaborative flow.
+    - Added an animated AI status indicator (spinner + message, auto-hide after 6s on completion/error) shown over the canvas during generation.
+     - Updated `ai-sidebar.tsx` with an `onPromptSubmit` callback prop and wired `workspace-view.tsx` to call the design agent API on prompt submission.
+     - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` pass.
+- Implemented Spec Persistence and Download (feature-specs/28-spec-persistence-download.md):
+    - Created `prisma/models/project-spec.prisma` with `ProjectSpec` model (`id`, `projectId`, `filePath`, `createdAt`, relation to `Project` with cascade delete, indexes on `projectId` and `[projectId, createdAt]`).
+    - Added reverse relation `specs ProjectSpec[]` on the `Project` model in `prisma/models/project.prisma`.
+    - Created and applied migration `20260510194247_add_project_spec`.
+    - Updated `POST /api/ai/spec` to create a `ProjectSpec` placeholder record alongside the `TaskRun`, returning `specId` in the response.
+    - Created `PATCH /api/projects/[projectId]/specs/[specId]` route: Clerk auth, project access check, spec ownership verification, uploads Markdown content to Vercel Blob as private `text/markdown`, stores blob URL in `filePath`.
+    - Created `GET /api/projects/[projectId]/specs/[specId]/download` route: Clerk auth, project access check, spec ownership verification, fetches content from Vercel Blob, returns as downloadable Markdown attachment with `Content-Disposition`.
+    - Fixed pre-existing TypeScript errors in `trigger/generate-spec.ts` (`.map()` callback parameter types on `unknown[]` arrays) — cast parameters with explicit `as Record<string, unknown>` assertions.
+    - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` all pass.
+- Wired Spec Generation button frontend logic (feature-specs/27-spec-generation-flow.md completion):
+    - Added `useReactFlow` and `generateSpec` type imports to `ai-sidebar.tsx`.
+    - Added spec generation state (`specRunId`, `specPublicToken`, `specId`, `specSendError`) and completion-guard ref, isolated from the AI Architect flow.
+    - Added `useRealtimeRun<typeof generateSpec>` to track spec task runs alongside the existing design agent run tracker.
+    - Created `handleGenerateSpec` callback: fetches canvas nodes/edges via React Flow, collects chat history from Liveblocks feed messages, calls `POST /api/ai/spec`, then `POST /api/ai/spec/token` for the public token, and sets tracking state.
+    - Added spec completion `useEffect`: on `COMPLETED`, persists the generated Markdown via `PATCH /api/projects/[projectId]/specs/[specId]` then refreshes the specs list; on failure/cancellation shows an error and clears state.
+    - Updated the "Generate Spec" button with `onClick`, `disabled` while generating, spinner icon, and "Generating..." label.
+    - Added generation status strip (spinner + metadata message) and error banner in the Specs tab.
+    - Verified `npx tsc --noEmit`, `npx biome check`, and `npm run build` all pass.

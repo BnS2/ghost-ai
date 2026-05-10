@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { AiSidebar } from "@/components/editor/ai-sidebar";
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
@@ -114,6 +113,8 @@ export function WorkspaceView({
         {/* Central Canvas Area */}
         <main className="flex-1 relative bg-canvas-bg overflow-hidden flex flex-col">
           <CanvasWrapper
+            aiSidebarOpen={isAiSidebarOpen}
+            onAiSidebarClose={() => setIsAiSidebarOpenInternal(false)}
             projectId={project.id}
             onSaveStatusChange={setSaveStatus}
             saveRef={saveRef}
@@ -121,8 +122,6 @@ export function WorkspaceView({
             templateImport={templateImport}
           />
         </main>
-
-        <AiSidebar isOpen={isAiSidebarOpen} onClose={() => setIsAiSidebarOpenInternal(false)} />
       </div>
 
       <ProjectDialogs

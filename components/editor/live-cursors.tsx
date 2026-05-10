@@ -3,6 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import { useOthers } from "@liveblocks/react/suspense";
 import { useViewport, ViewportPortal } from "@xyflow/react";
+import { Loader2Icon } from "lucide-react";
 
 interface CursorParticipant {
   color: string;
@@ -10,6 +11,7 @@ interface CursorParticipant {
   cursor: { x: number; y: number };
   id: string;
   name: string;
+  thinking: boolean;
 }
 
 export function LiveCursors() {
@@ -29,6 +31,7 @@ export function LiveCursors() {
         cursor: participant.presence.cursor,
         id: participant.id,
         name: participant.info.name || "Collaborator",
+        thinking: participant.presence.thinking ?? false,
       },
     ];
   });
@@ -66,10 +69,13 @@ export function LiveCursors() {
               />
             </svg>
             <div
-              className="absolute left-4 top-4 max-w-36 truncate rounded-xl px-2 py-1 text-[11px] font-semibold leading-none text-text-primary shadow-lg ring-1 ring-bg-base"
+              className="absolute left-4 top-4 flex max-w-36 items-center gap-1.5 truncate rounded-xl px-2 py-1 text-[11px] font-semibold leading-none text-text-primary shadow-lg ring-1 ring-bg-base"
               style={{ backgroundColor: participant.color }}
             >
-              {participant.name}
+              {participant.thinking ? (
+                <Loader2Icon aria-hidden="true" className="h-3 w-3 shrink-0 animate-spin" />
+              ) : null}
+              <span className="truncate">{participant.name}</span>
             </div>
           </div>
         </div>
