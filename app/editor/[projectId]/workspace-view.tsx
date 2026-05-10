@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AiSidebar } from "@/components/editor/ai-sidebar";
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
@@ -10,6 +10,7 @@ import { ShareDialog } from "@/components/editor/share-dialog";
 import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
 import type { Project } from "@/components/editor/use-project-dialogs";
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { useProjectActions } from "@/hooks/use-project-actions";
 
 interface WorkspaceViewProps {
@@ -40,11 +41,20 @@ export function WorkspaceView({
   const [isAiSidebarOpenInternal, setIsAiSidebarOpenInternal] = useState<boolean | null>(null);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<CanvasSaveStatus>("idle");
+  const saveRef = useRef<(() => void) | null>(null);
   const [templateImport, setTemplateImport] = useState<{
     id: number;
     template: CanvasTemplate;
   } | null>(null);
   const templateImportIdRef = useRef(0);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: must reset when project changes
+  useEffect(() => {
+    const id = setTimeout(() => setSaveStatus("idle"), 0);
+    saveRef.current = null;
+    return () => clearTimeout(id);
+  }, [project.id]);
 
   // Derived state: Use internal override if set, otherwise follow isDesktop
   const isAiSidebarOpen = isAiSidebarOpenInternal ?? isDesktop;
@@ -80,6 +90,8 @@ export function WorkspaceView({
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         projectName={project.name}
+        saveStatus={saveStatus}
+        onSave={() => saveRef.current?.()}
         isAiSidebarOpen={isAiSidebarOpen}
         onOpenTemplates={() => setIsTemplatesModalOpen(true)}
         onToggleAiSidebar={toggleAiSidebar}
@@ -103,6 +115,8 @@ export function WorkspaceView({
         <main className="flex-1 relative bg-canvas-bg overflow-hidden flex flex-col">
           <CanvasWrapper
             projectId={project.id}
+            onSaveStatusChange={setSaveStatus}
+            saveRef={saveRef}
             onTemplateImported={() => setTemplateImport(null)}
             templateImport={templateImport}
           />
