@@ -7,7 +7,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Phase 1: Foundation
 
 ## Current Goal
-- Starter template import for the collaborative canvas.
+- Canvas persistence.
 
 ## Completed
 - Project context and architecture definition.
@@ -37,6 +37,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented Starter Templates (feature-specs/18-starter-templates.md). Added typed static canvas templates, a preview/import modal, a navbar entry point, and Liveblocks-backed replace import behavior with fit-view.
 - Remediated canvas accessibility and timing findings: normalized edge label draft sync without `flushSync`, made edge labels the single keyboard-accessible edit control, labeled the compact Templates navbar button, and moved template import viewport fitting to React Flow node initialization.
 - Removed redundant edge draft-label sync effect so edge editing no longer calls React state setters synchronously inside an effect.
+- Implemented Canvas Ergonomics Deletion Patch (feature-specs/17.5-canvas-ergonomics-deletion.md). Added explicit Backspace/Delete keyboard deletion, click-drag box selection, a selected-node trash action, and a bottom "Delete selected" control that appears only when elements are selected, routed through React Flow's Liveblocks-backed deletion path.
 
 ## In Progress
 - (none — next: canvas persistence)
@@ -152,3 +153,9 @@ Update this file whenever the current phase, active feature, or implementation s
     - Added `components/editor/starter-templates-modal.tsx` with scrollable template cards, fixed-size lightweight SVG previews, and import actions.
     - Added a Templates navbar button and routed imports through `WorkspaceView` into `CanvasFlow`.
     - Imported templates by removing existing Liveblocks React Flow nodes/edges, adding the selected template snapshot, then fitting the React Flow viewport.
+- Implemented Canvas Ergonomics Deletion Patch (feature-specs/17.5-canvas-ergonomics-deletion.md):
+    - Configured React Flow deletion keys to support both `Backspace` and `Delete`.
+    - Added a selected-node trash action in `CanvasNode` that calls React Flow `deleteElements`.
+    - Enabled click-drag box selection with partial selection for more forgiving multi-select behavior.
+    - Added a bottom canvas control for deleting selected nodes/edges with a visible selected count, shown only while a selection exists.
+    - Kept deletion routed through the existing `useLiveblocksFlow` `onDelete` integration so node/edge removal remains collaborative and undoable.

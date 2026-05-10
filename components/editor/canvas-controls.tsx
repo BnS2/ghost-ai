@@ -2,16 +2,18 @@
 
 import type { Edge, Node, ReactFlowInstance } from "@xyflow/react";
 import type { LucideIcon } from "lucide-react";
-import { Maximize2, Minus, Plus, Redo2, Undo2 } from "lucide-react";
+import { Maximize2, Minus, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
 
 const VIEWPORT_ANIMATION_MS = 180;
 
 interface CanvasControlsProps<NodeType extends Node, EdgeType extends Edge> {
   canRedo: boolean;
   canUndo: boolean;
+  onDeleteSelected: () => void;
   onRedo: () => void;
   onUndo: () => void;
   reactFlow: ReactFlowInstance<NodeType, EdgeType>;
+  selectedCount: number;
 }
 
 interface ControlButtonProps {
@@ -39,10 +41,14 @@ function ControlButton({ disabled = false, icon: Icon, label, onClick }: Control
 export function CanvasControls<NodeType extends Node, EdgeType extends Edge>({
   canRedo,
   canUndo,
+  onDeleteSelected,
   onRedo,
   onUndo,
   reactFlow,
+  selectedCount,
 }: CanvasControlsProps<NodeType, EdgeType>) {
+  const hasSelection = selectedCount > 0;
+
   return (
     <div
       className="absolute bottom-24 left-6 z-10 flex items-center gap-2 rounded-full border border-border-subtle bg-surface/95 px-3 py-2 shadow-2xl backdrop-blur"
@@ -75,6 +81,24 @@ export function CanvasControls<NodeType extends Node, EdgeType extends Edge>({
         <ControlButton disabled={!canUndo} icon={Undo2} label="Undo" onClick={onUndo} />
         <ControlButton disabled={!canRedo} icon={Redo2} label="Redo" onClick={onRedo} />
       </div>
+      {hasSelection && (
+        <>
+          <div aria-hidden="true" className="h-6 w-px bg-border-subtle" />
+          <button
+            type="button"
+            aria-label={`Delete ${selectedCount} selected elements`}
+            className="flex h-9 items-center gap-2 rounded-xl border border-border-default px-3 text-sm font-medium text-text-secondary transition-colors hover:border-state-error hover:bg-subtle hover:text-state-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-state-error"
+            onClick={onDeleteSelected}
+            title={`Delete ${selectedCount} selected`}
+          >
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
+            <span>Delete selected</span>
+            <span className="rounded-xl bg-subtle px-1.5 py-0.5 text-xs text-text-primary">
+              {selectedCount}
+            </span>
+          </button>
+        </>
+      )}
     </div>
   );
 }

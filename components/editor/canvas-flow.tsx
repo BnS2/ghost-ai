@@ -13,13 +13,15 @@ import {
   MarkerType,
   MiniMap,
   type NodeProps,
+  type OnSelectionChangeParams,
   ReactFlow,
+  SelectionMode,
   useNodesInitialized,
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import {
   type CanvasShapeDragPayload,
@@ -128,6 +130,7 @@ export function CanvasFlow({
   const nodeIdCounter = useRef(0);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
+  const [selectedElementCount, setSelectedElementCount] = useState(0);
   const lastTemplateImportIdRef = useRef<number | null>(null);
   const fitViewAppliedRef = useRef<number | null>(null);
   const miniMapNodeColor = useCallback(
@@ -254,6 +257,37 @@ export function CanvasFlow({
     [onNodesChange],
   );
 
+  const deleteNode = useCallback(
+    (nodeId: string) => {
+      void reactFlow.deleteElements({ nodes: [{ id: nodeId }] });
+    },
+    [reactFlow],
+  );
+
+  const deleteSelectedElements = useCallback(() => {
+    const selectedNodes = reactFlow.getNodes().filter((node) => node.selected);
+    const selectedEdges = reactFlow.getEdges().filter((edge) => edge.selected);
+
+    if (selectedNodes.length === 0 && selectedEdges.length === 0) {
+      return;
+    }
+
+    void reactFlow.deleteElements({
+      nodes: selectedNodes,
+      edges: selectedEdges,
+    });
+  }, [reactFlow]);
+
+  const updateSelectionCount = useCallback(
+    ({
+      edges: selectedEdges,
+      nodes: selectedNodes,
+    }: OnSelectionChangeParams<canvasNode, canvasEdge>) => {
+      setSelectedElementCount(selectedNodes.length + selectedEdges.length);
+    },
+    [],
+  );
+
   const updateEdgeLabel = useCallback(
     (edgeId: string, label: string) => {
       const edge = edgesRef.current.find((currentEdge) => currentEdge.id === edgeId);
@@ -285,11 +319,12 @@ export function CanvasFlow({
         <CanvasNode
           {...nodeProps}
           onColorChange={updateNodeColor}
+          onDelete={deleteNode}
           onLabelChange={updateNodeLabel}
         />
       ),
     }),
-    [updateNodeColor, updateNodeLabel],
+    [deleteNode, updateNodeColor, updateNodeLabel],
   );
 
   const edgeTypes = useMemo(
@@ -402,12 +437,17 @@ export function CanvasFlow({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onDelete={onDelete}
+        onSelectionChange={updateSelectionCount}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={DEFAULT_CANVAS_EDGE_OPTIONS}
+        deleteKeyCode={["Backspace", "Delete"]}
         fitView
         connectionMode={ConnectionMode.Loose}
         connectionRadius={36}
+        panOnDrag={[1, 2]}
+        selectionMode={SelectionMode.Partial}
+        selectionOnDrag
         className="w-full h-full"
       >
         <Background
@@ -431,9 +471,11 @@ export function CanvasFlow({
         <CanvasControls
           canRedo={canRedo}
           canUndo={canUndo}
+          onDeleteSelected={deleteSelectedElements}
           onRedo={handleRedo}
           onUndo={handleUndo}
           reactFlow={reactFlow}
+          selectedCount={selectedElementCount}
         />
       </ReactFlow>
     </div>

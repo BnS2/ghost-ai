@@ -1,4 +1,5 @@
 import { Handle, type NodeProps, NodeResizer, Position } from "@xyflow/react";
+import { Trash2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type canvasNode, NODE_COLORS } from "@/types/canvas";
@@ -17,6 +18,7 @@ const CONNECTION_HANDLE_POSITIONS = [Position.Top, Position.Right, Position.Bott
 
 interface CanvasNodeProps extends NodeProps<canvasNode> {
   onColorChange: (nodeId: string, color: (typeof NODE_COLORS)[number]) => void;
+  onDelete: (nodeId: string) => void;
   onLabelChange: (nodeId: string, label: string) => void;
 }
 
@@ -24,7 +26,14 @@ function stopCanvasInteraction(event: React.SyntheticEvent) {
   event.stopPropagation();
 }
 
-export function CanvasNode({ data, id, selected, onColorChange, onLabelChange }: CanvasNodeProps) {
+export function CanvasNode({
+  data,
+  id,
+  selected,
+  onColorChange,
+  onDelete,
+  onLabelChange,
+}: CanvasNodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const label = data.label;
@@ -98,8 +107,8 @@ export function CanvasNode({ data, id, selected, onColorChange, onLabelChange }:
       ))}
       {selected && (
         <div
-          aria-label="Node color themes"
-          className="nodrag nopan absolute bottom-full left-1/2 z-30 mb-3 flex -translate-x-1/2 gap-1.5 rounded-xl border border-border-default bg-elevated/95 p-1.5 shadow-lg backdrop-blur"
+          aria-label="Node actions"
+          className="nodrag nopan absolute bottom-full left-1/2 z-30 mb-3 flex -translate-x-1/2 items-center gap-1.5 rounded-xl border border-border-default bg-elevated/95 p-1.5 shadow-lg backdrop-blur"
           onDoubleClick={stopCanvasInteraction}
           onMouseDown={stopCanvasInteraction}
           onPointerDown={stopCanvasInteraction}
@@ -141,6 +150,21 @@ export function CanvasNode({ data, id, selected, onColorChange, onLabelChange }:
               </button>
             );
           })}
+          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-border-default" />
+          <button
+            aria-label="Delete node"
+            className="flex h-5 w-5 items-center justify-center rounded-xl border border-border-default bg-surface text-copy-secondary transition-colors hover:border-state-error hover:text-state-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-state-error focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(id);
+            }}
+            onMouseDown={stopCanvasInteraction}
+            onPointerDown={stopCanvasInteraction}
+            title="Delete node"
+            type="button"
+          >
+            <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
       <button
