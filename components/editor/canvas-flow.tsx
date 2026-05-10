@@ -1,6 +1,12 @@
 "use client";
 
-import { useCanRedo, useCanUndo, useRedo, useUndo } from "@liveblocks/react/suspense";
+import {
+  useCanRedo,
+  useCanUndo,
+  useRedo,
+  useUndo,
+  useUpdateMyPresence,
+} from "@liveblocks/react/suspense";
 import { useLiveblocksFlow } from "@liveblocks/react-flow";
 import {
   addEdge,
@@ -36,6 +42,7 @@ import {
 import { CanvasControls } from "./canvas-controls";
 import { CanvasEdge } from "./canvas-edge";
 import { CanvasNode } from "./canvas-node";
+import { LiveCursors } from "./live-cursors";
 import { SHAPE_DRAG_MIME_TYPE } from "./shape-panel";
 import type { CanvasTemplate } from "./starter-templates";
 
@@ -157,6 +164,7 @@ export function CanvasFlow({
   const redo = useRedo();
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
+  const updateMyPresence = useUpdateMyPresence();
 
   const reactFlow = useReactFlow<canvasNode, canvasEdge>();
   const isInitialized = useNodesInitialized();
@@ -595,12 +603,29 @@ export function CanvasFlow({
     [onNodesChange, onPreviewClear, reactFlow],
   );
 
+  const updateCursorPresence = useCallback(
+    (event: React.MouseEvent) => {
+      const cursor = reactFlow.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      updateMyPresence({ cursor });
+    },
+    [reactFlow, updateMyPresence],
+  );
+
+  const clearCursorPresence = useCallback(() => {
+    updateMyPresence({ cursor: null });
+  }, [updateMyPresence]);
+
   return (
     <div
       aria-label="Architecture canvas"
       className="h-full w-full"
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onMouseLeave={clearCursorPresence}
       role="application"
     >
       <ReactFlow
@@ -610,6 +635,7 @@ export function CanvasFlow({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onDelete={onDelete}
+        onMouseMove={updateCursorPresence}
         onSelectionChange={updateSelectionCount}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -641,6 +667,7 @@ export function CanvasFlow({
           nodeStrokeColor="var(--border-subtle)"
           nodeStrokeWidth={1}
         />
+        <LiveCursors />
         <CanvasControls
           canRedo={canRedo}
           canUndo={canUndo}

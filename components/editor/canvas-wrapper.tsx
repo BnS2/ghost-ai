@@ -5,6 +5,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { Component, type ReactNode, useCallback, useState } from "react";
 import { CanvasFlow } from "./canvas-flow";
 import { NodeShape } from "./node-shape";
+import { PresenceAvatarGroup } from "./presence-avatar-group";
 import { type ShapeDragPreviewState, ShapePanel } from "./shape-panel";
 import type { CanvasTemplate } from "./starter-templates";
 
@@ -76,7 +77,7 @@ export function CanvasWrapper({
       }
     >
       <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-        <RoomProvider id={projectId} initialPresence={{ cursor: null, isThinking: false }}>
+        <RoomProvider id={projectId} initialPresence={{ cursor: null, thinking: false }}>
           <ClientSideSuspense
             fallback={
               <div className="flex-1 flex flex-col items-center justify-center text-text-muted space-y-4">
@@ -93,6 +94,7 @@ export function CanvasWrapper({
                   onTemplateImported={onTemplateImported}
                   templateImport={templateImport}
                 />
+                <PresenceAvatarGroup />
                 <ShapePanel onPreviewChange={setShapePreview} />
                 {shapePreview ? (
                   <div

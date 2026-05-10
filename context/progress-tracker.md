@@ -39,6 +39,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Removed redundant edge draft-label sync effect so edge editing no longer calls React state setters synchronously inside an effect.
 - Implemented Canvas Ergonomics Deletion Patch (feature-specs/17.5-canvas-ergonomics-deletion.md). Added explicit Backspace/Delete keyboard deletion, click-drag box selection, a selected-node trash action, and a bottom "Delete selected" control that appears only when elements are selected, routed through React Flow's Liveblocks-backed deletion path.
 - Implemented Canvas Ergonomics Copy/Duplicate Patch (feature-specs/17.6-canvas-ergonomics-copy-duplicate.md). Added selected-node copy, paste, and duplicate shortcuts; visible copy/duplicate toolbar actions for single-node selections; offset pasted placement; multi-node relative positioning; internal edge duplication with new IDs; editable-field shortcut guards; and Liveblocks-backed node/edge insertion.
+- Implemented Presence Avatars and Cursors (feature-specs/19-presence-avatars-cursors.md). Added a canvas-scoped participant avatar group, filtered Liveblocks collaborators to exclude the current Clerk user, rendered the current user as a static Clerk-profile avatar image, and added Liveblocks-backed live cursors for other participants.
 
 ## In Progress
 - (none — next: canvas persistence)
@@ -60,6 +61,14 @@ Update this file whenever the current phase, active feature, or implementation s
     - Hid the per-node selected toolbar when multiple nodes are selected so repeated color/copy/duplicate/delete controls do not clutter multi-select.
     - Verified `npx tsc --noEmit` and targeted `npx biome check components/editor/canvas-flow.tsx components/editor/canvas-node.tsx hooks/useKeyboardShortcuts.ts` pass.
     - Verified `npm run build` passes after allowing `next/font` to fetch Google font assets.
+- Implemented Presence Avatars and Cursors (feature-specs/19-presence-avatars-cursors.md):
+    - Added `components/editor/presence-avatar-group.tsx` with a canvas-only top-right participant group.
+    - Filtered Liveblocks `useOthers` by the active Clerk user ID so collaborators exclude the current user.
+    - Rendered up to five collaborator avatars with profile-photo backgrounds, initials fallback, dark-canvas rings, and a `+N` overflow chip.
+    - Rendered the current user separately as a static avatar using the active Clerk user image, always labelled "You", with the divider shown only when collaborators are present.
+    - Added `components/editor/live-cursors.tsx` and wired `CanvasFlow` mouse movement to `useUpdateMyPresence`.
+    - Stored cursor positions in React Flow coordinates and rendered other participants through `ViewportPortal`.
+    - Updated Liveblocks presence from `isThinking` to the spec-defined `thinking` field.
 - Completed Editor Home and Project Dialogs implementation.
 - Wired sidebar actions (Rename, Delete) and New Project button.
 - Implemented slug preview logic in Create Project dialog.
@@ -99,13 +108,13 @@ Update this file whenever the current phase, active feature, or implementation s
     - Wired "Share" button in `EditorNavbar` and managed state in `WorkspaceView`.
     - Handled "Copy Link" with temporary feedback and enforced ownership server-side.
 - Implemented Liveblocks Setup (feature-specs/10-liveblocks-setup.md):
-    - Configured `liveblocks.config.ts` with `Presence` (cursor, isThinking) and `UserMeta`.
+    - Configured `liveblocks.config.ts` with `Presence` (cursor, thinking) and `UserMeta`.
     - Finalized the cached `@liveblocks/node` client in `lib/liveblocks.ts` using the global caching pattern to prevent hot-reload memory leaks.
     - Created `POST /api/liveblocks-auth` to securely generate Liveblocks session tokens using project access verification.
     - Added `export const dynamic = "force-dynamic";` to `/api/projects/[projectId]/collaborators` routes to prevent Next.js from attempting static generation on authenticated routes.
 - Implemented Base Canvas (feature-specs/11-base-canvas.md):
     - Added `types/canvas.ts` with `CanvasNodeData`, `canvasNode`, and `canvasEdge` types.
-    - Created `components/editor/canvas-wrapper.tsx`: wraps the Liveblocks `LiveblocksProvider` + `RoomProvider` with `initialPresence { cursor: null, isThinking: false }`, a `ClientSideSuspense` loading fallback, and a class-based `ErrorBoundary` for connection errors.
+    - Created `components/editor/canvas-wrapper.tsx`: wraps the Liveblocks `LiveblocksProvider` + `RoomProvider` with `initialPresence { cursor: null, thinking: false }`, a `ClientSideSuspense` loading fallback, and a class-based ErrorBoundary for connection errors.
     - Created `components/editor/canvas-flow.tsx`: uses `useLiveblocksFlow<canvasNode, canvasEdge>({ suspense: true })` and renders a `ReactFlow` with `ConnectionMode.Loose`, `fitView`, dot-pattern `Background`, and `MiniMap`.
     - Replaced the canvas placeholder in `workspace-view.tsx` with `<CanvasWrapper projectId={project.id} />`.
     - `npm run build` TypeScript and compile steps pass cleanly.
