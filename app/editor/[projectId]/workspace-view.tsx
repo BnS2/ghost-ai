@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AiSidebar } from "@/components/editor/ai-sidebar";
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
@@ -10,7 +11,6 @@ import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
 import type { Project } from "@/components/editor/use-project-dialogs";
 import { useProjectActions } from "@/hooks/use-project-actions";
-import { cn } from "@/lib/utils";
 
 interface WorkspaceViewProps {
   project: { id: string; name: string; ownerId: string };
@@ -108,27 +108,7 @@ export function WorkspaceView({
           />
         </main>
 
-        {/* Right Sidebar Placeholder (AI Chat) */}
-        <aside
-          className={cn(
-            "w-[350px] border-l border-border-subtle bg-surface flex flex-col transition-all duration-300 ease-in-out shrink-0",
-            !isAiSidebarOpen && "w-0 border-none opacity-0 overflow-hidden",
-          )}
-        >
-          <div className="p-4 border-b border-border-subtle flex items-center gap-2">
-            <div className="w-2 h-2 bg-accent rounded-full" />
-            <span className="text-sm font-semibold text-text-primary">AI Assistant</span>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-text-muted">
-              AI capabilities coming soon
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              In the future, you&apos;ll be able to chat with an AI to help build and refine your
-              canvas nodes.
-            </p>
-          </div>
-        </aside>
+        <AiSidebar isOpen={isAiSidebarOpen} onClose={() => setIsAiSidebarOpenInternal(false)} />
       </div>
 
       <ProjectDialogs
