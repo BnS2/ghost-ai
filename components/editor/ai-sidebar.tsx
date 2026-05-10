@@ -1,7 +1,7 @@
 "use client";
 
 import { BotIcon, DownloadIcon, FileTextIcon, SendIcon, SparklesIcon, XIcon } from "lucide-react";
-import { type KeyboardEvent, useCallback, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,9 @@ const STARTER_PROMPTS = [
   "Create a chat app architecture",
   "Build a CI/CD pipeline",
 ];
+
+const COMPOSER_MIN_HEIGHT = 72;
+const COMPOSER_MAX_HEIGHT = 160;
 
 interface ChatMessage {
   id: string;
@@ -28,6 +31,14 @@ interface AiSidebarProps {
 export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
+  const resizeComposer = useCallback((composer: HTMLTextAreaElement) => {
+    composer.style.height = `${COMPOSER_MIN_HEIGHT}px`;
+    const nextHeight = Math.min(composer.scrollHeight, COMPOSER_MAX_HEIGHT);
+    composer.style.height = `${nextHeight}px`;
+    composer.style.overflowY = composer.scrollHeight > COMPOSER_MAX_HEIGHT ? "auto" : "hidden";
+  }, []);
 
   const submitPrompt = useCallback(() => {
     const trimmedPrompt = prompt.trim();
@@ -53,7 +64,20 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
       },
     ]);
     setPrompt("");
+    if (composerRef.current) {
+      composerRef.current.style.height = `${COMPOSER_MIN_HEIGHT}px`;
+      composerRef.current.style.overflowY = "hidden";
+    }
   }, [prompt]);
+
+  const handleComposerInput = useCallback(
+    (event: FormEvent<HTMLTextAreaElement>) => {
+      const composer = event.currentTarget;
+      setPrompt(composer.value);
+      resizeComposer(composer);
+    },
+    [resizeComposer],
+  );
 
   const handleComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key !== "Enter" || event.shiftKey) {
@@ -67,6 +91,8 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
   return (
     <aside
       aria-label="AI workspace"
+      aria-hidden={!isOpen}
+      inert={!isOpen ? true : undefined}
       className={cn(
         "absolute top-4 right-4 bottom-4 z-30 flex w-[min(380px,calc(100%-2rem))] flex-col overflow-hidden rounded-2xl border border-surface-border bg-base/95 shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-all duration-300 ease-in-out",
         isOpen
@@ -162,8 +188,10 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
             <div className="border-t border-surface-border bg-base/80 p-4">
               <div className="flex items-end gap-2">
                 <Textarea
+                  ref={composerRef}
                   value={prompt}
                   onChange={(event) => setPrompt(event.target.value)}
+                  onInput={handleComposerInput}
                   onKeyDown={handleComposerKeyDown}
                   placeholder="Ask Ghost AI to design, explain, or refine..."
                   className="max-h-40 min-h-[72px] resize-none bg-elevated/60 text-sm"

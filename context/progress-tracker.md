@@ -41,6 +41,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented Canvas Ergonomics Copy/Duplicate Patch (feature-specs/17.6-canvas-ergonomics-copy-duplicate.md). Added selected-node copy, paste, and duplicate shortcuts; visible copy/duplicate toolbar actions for single-node selections; offset pasted placement; multi-node relative positioning; internal edge duplication with new IDs; editable-field shortcut guards; and Liveblocks-backed node/edge insertion.
 - Implemented Presence Avatars and Cursors (feature-specs/19-presence-avatars-cursors.md). Added a canvas-scoped participant avatar group, filtered Liveblocks collaborators to exclude the current Clerk user, rendered the current user as a static Clerk-profile avatar image, and added Liveblocks-backed live cursors for other participants.
 - Implemented AI Sidebar Shell (feature-specs/20-ai-sidebar-shell.md). Extracted the AI workspace sidebar into its own controlled component, added the header, AI Architect and Specs tabs, chat empty state with starter prompts, local prompt composer behavior, and static spec generation/demo card UI.
+- Remediated AI Sidebar accessibility and composer findings: closed sidebar state now applies `aria-hidden` and `inert`, and the prompt textarea now resizes from its minimum height up to the configured maximum while preserving send-key behavior.
 
 ## In Progress
 - (none — next: canvas persistence)
@@ -76,6 +77,9 @@ Update this file whenever the current phase, active feature, or implementation s
     - Added the `AI Workspace` header, `AI Architect` and `Specs` tabs, close action, and token-based dark surface styling.
     - Added an AI Architect empty state, starter prompt chips, local chat message display, auto-sizing prompt textarea, and Enter-to-send behavior.
     - Added a Specs tab with a `Generate Spec` button and static demo spec card with disabled download action.
+- Remediated AI Sidebar inline findings:
+    - Verified the closed AI sidebar only used visual hiding plus `pointer-events-none`; added `aria-hidden` and native `inert` while closed.
+    - Verified the composer textarea had min/max sizing classes but no input-time height measurement; added a measured `onInput` resize path clamped to `max-h-40`.
 - Completed Editor Home and Project Dialogs implementation.
 - Wired sidebar actions (Rename, Delete) and New Project button.
 - Implemented slug preview logic in Create Project dialog.
