@@ -1,5 +1,5 @@
 import { Handle, type NodeProps, NodeResizer, Position } from "@xyflow/react";
-import { Trash2 } from "lucide-react";
+import { Copy, CopyPlus, Trash2 } from "lucide-react";
 import type React from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type canvasNode, NODE_COLORS } from "@/types/canvas";
@@ -18,8 +18,11 @@ const CONNECTION_HANDLE_POSITIONS = [Position.Top, Position.Right, Position.Bott
 
 interface CanvasNodeProps extends NodeProps<canvasNode> {
   onColorChange: (nodeId: string, color: (typeof NODE_COLORS)[number]) => void;
+  onCopy: () => void;
   onDelete: (nodeId: string) => void;
+  onDuplicate: () => void;
   onLabelChange: (nodeId: string, label: string) => void;
+  showToolbar: boolean;
 }
 
 function stopCanvasInteraction(event: React.SyntheticEvent) {
@@ -31,8 +34,11 @@ export function CanvasNode({
   id,
   selected,
   onColorChange,
+  onCopy,
   onDelete,
+  onDuplicate,
   onLabelChange,
+  showToolbar,
 }: CanvasNodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -105,7 +111,7 @@ export function CanvasNode({
           className={HANDLE_CLASS}
         />
       ))}
-      {selected && (
+      {selected && showToolbar && (
         <div
           aria-label="Node actions"
           className="nodrag nopan absolute bottom-full left-1/2 z-30 mb-3 flex -translate-x-1/2 items-center gap-1.5 rounded-xl border border-border-default bg-elevated/95 p-1.5 shadow-lg backdrop-blur"
@@ -150,6 +156,35 @@ export function CanvasNode({
               </button>
             );
           })}
+          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-border-default" />
+          <button
+            aria-label="Copy selected nodes"
+            className="flex h-5 w-5 items-center justify-center rounded-xl border border-border-default bg-surface text-copy-secondary transition-colors hover:border-accent-primary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
+            onClick={(event) => {
+              event.stopPropagation();
+              onCopy();
+            }}
+            onMouseDown={stopCanvasInteraction}
+            onPointerDown={stopCanvasInteraction}
+            title="Copy selected nodes"
+            type="button"
+          >
+            <Copy aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
+          <button
+            aria-label="Duplicate selected nodes"
+            className="flex h-5 w-5 items-center justify-center rounded-xl border border-border-default bg-surface text-copy-secondary transition-colors hover:border-accent-primary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-elevated"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDuplicate();
+            }}
+            onMouseDown={stopCanvasInteraction}
+            onPointerDown={stopCanvasInteraction}
+            title="Duplicate selected nodes"
+            type="button"
+          >
+            <CopyPlus aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
           <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-border-default" />
           <button
             aria-label="Delete node"

@@ -9,9 +9,11 @@ import {
   type Connection,
   ConnectionMode,
   type DefaultEdgeOptions,
+  type EdgeChange,
   type EdgeProps,
   MarkerType,
   MiniMap,
+  type NodeChange,
   type NodeProps,
   type OnSelectionChangeParams,
   ReactFlow,
@@ -38,6 +40,7 @@ import { SHAPE_DRAG_MIME_TYPE } from "./shape-panel";
 import type { CanvasTemplate } from "./starter-templates";
 
 const CANVAS_EDGE_TYPE = "canvas";
+const CLIPBOARD_OFFSET = 32;
 const DEFAULT_CANVAS_EDGE_OPTIONS = {
   type: CANVAS_EDGE_TYPE,
   data: {
@@ -66,6 +69,12 @@ interface CanvasFlowProps {
     id: number;
     template: CanvasTemplate;
   } | null;
+}
+
+interface CanvasClipboard {
+  edges: canvasEdge[];
+  nodes: canvasNode[];
+  pasteCount: number;
 }
 
 function isShapeDragPayload(value: unknown): value is CanvasShapeDragPayload {
@@ -108,6 +117,30 @@ function cloneTemplateEdge(edge: canvasEdge): canvasEdge {
   };
 }
 
+function cloneClipboardNode(node: canvasNode): canvasNode {
+  return {
+    ...node,
+    data: {
+      ...node.data,
+    },
+    dragging: false,
+    position: {
+      ...node.position,
+    },
+    selected: false,
+    style: node.style ? { ...node.style } : undefined,
+  };
+}
+
+function cloneClipboardEdge(edge: canvasEdge): canvasEdge {
+  return {
+    ...edge,
+    data: edge.data ? { ...edge.data } : undefined,
+    selected: false,
+    style: edge.style ? { ...edge.style } : undefined,
+  };
+}
+
 export function CanvasFlow({
   onPreviewClear,
   onPreviewMove,
@@ -128,9 +161,12 @@ export function CanvasFlow({
   const reactFlow = useReactFlow<canvasNode, canvasEdge>();
   const isInitialized = useNodesInitialized();
   const nodeIdCounter = useRef(0);
+  const edgeIdCounter = useRef(0);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
+  const clipboardRef = useRef<CanvasClipboard | null>(null);
   const [selectedElementCount, setSelectedElementCount] = useState(0);
+  const [selectedNodeCount, setSelectedNodeCount] = useState(0);
   const lastTemplateImportIdRef = useRef<number | null>(null);
   const fitViewAppliedRef = useRef<number | null>(null);
   const miniMapNodeColor = useCallback(
@@ -150,7 +186,133 @@ export function CanvasFlow({
     }
   }, [canRedo, redo]);
 
-  useKeyboardShortcuts(reactFlow, handleUndo, handleRedo);
+  const copySelection = useCallback(() => {
+    const selectedNodes = reactFlow.getNodes().filter((node) => node.selected);
+
+    if (selectedNodes.length === 0) {
+      return false;
+    }
+
+    const selectedNodeIds = new Set(selectedNodes.map((node) => node.id));
+    const internalEdges = reactFlow
+      .getEdges()
+      .filter((edge) => selectedNodeIds.has(edge.source) && selectedNodeIds.has(edge.target));
+
+    clipboardRef.current = {
+      edges: internalEdges.map(cloneClipboardEdge),
+      nodes: selectedNodes.map(cloneClipboardNode),
+      pasteCount: 0,
+    };
+
+    return true;
+  }, [reactFlow]);
+
+  const pasteClipboard = useCallback(() => {
+    const clipboard = clipboardRef.current;
+
+    if (!clipboard || clipboard.nodes.length === 0) {
+      return false;
+    }
+
+    const pasteCount = clipboard.pasteCount + 1;
+    clipboardRef.current = {
+      ...clipboard,
+      pasteCount,
+    };
+
+    const idMap = new Map<string, string>();
+    const offset = CLIPBOARD_OFFSET * pasteCount;
+
+    const existingNodeSelectionChanges = reactFlow
+      .getNodes()
+      .filter((node) => node.selected)
+      .map<NodeChange<canvasNode>>((node) => ({
+        id: node.id,
+        selected: false,
+        type: "select",
+      }));
+    const existingEdgeSelectionChanges = reactFlow
+      .getEdges()
+      .filter((edge) => edge.selected)
+      .map<EdgeChange<canvasEdge>>((edge) => ({
+        id: edge.id,
+        selected: false,
+        type: "select",
+      }));
+
+    const newNodes = clipboard.nodes.map<canvasNode>((node) => {
+      const nextCounter = nodeIdCounter.current;
+      nodeIdCounter.current += 1;
+
+      const nextNodeId = `${node.id}-copy-${Date.now()}-${nextCounter}`;
+      idMap.set(node.id, nextNodeId);
+
+      return {
+        ...cloneClipboardNode(node),
+        id: nextNodeId,
+        position: {
+          x: node.position.x + offset,
+          y: node.position.y + offset,
+        },
+        selected: true,
+      };
+    });
+
+    const newEdges = clipboard.edges.flatMap<canvasEdge>((edge) => {
+      const source = idMap.get(edge.source);
+      const target = idMap.get(edge.target);
+
+      if (!source || !target) {
+        return [];
+      }
+
+      const nextCounter = edgeIdCounter.current;
+      edgeIdCounter.current += 1;
+
+      return [
+        {
+          ...cloneClipboardEdge(edge),
+          id: `${edge.id}-copy-${Date.now()}-${nextCounter}`,
+          source,
+          target,
+          selected: false,
+        },
+      ];
+    });
+
+    if (existingEdgeSelectionChanges.length > 0 || newEdges.length > 0) {
+      onEdgesChange([
+        ...existingEdgeSelectionChanges,
+        ...newEdges.map<EdgeChange<canvasEdge>>((edge) => ({ item: edge, type: "add" })),
+      ]);
+    }
+
+    onNodesChange([
+      ...existingNodeSelectionChanges,
+      ...newNodes.map<NodeChange<canvasNode>>((node) => ({ item: node, type: "add" })),
+    ]);
+
+    return true;
+  }, [onEdgesChange, onNodesChange, reactFlow]);
+
+  const duplicateSelection = useCallback(() => {
+    if (!copySelection()) {
+      return false;
+    }
+
+    return pasteClipboard();
+  }, [copySelection, pasteClipboard]);
+
+  const clipboardActions = useMemo(
+    () => ({
+      copy: copySelection,
+      duplicate: duplicateSelection,
+      paste: pasteClipboard,
+    }),
+    [copySelection, duplicateSelection, pasteClipboard],
+  );
+
+  useKeyboardShortcuts(reactFlow, handleUndo, handleRedo, clipboardActions);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -284,6 +446,7 @@ export function CanvasFlow({
       nodes: selectedNodes,
     }: OnSelectionChangeParams<canvasNode, canvasEdge>) => {
       setSelectedElementCount(selectedNodes.length + selectedEdges.length);
+      setSelectedNodeCount(selectedNodes.length);
     },
     [],
   );
@@ -319,12 +482,22 @@ export function CanvasFlow({
         <CanvasNode
           {...nodeProps}
           onColorChange={updateNodeColor}
+          onCopy={copySelection}
           onDelete={deleteNode}
+          onDuplicate={duplicateSelection}
           onLabelChange={updateNodeLabel}
+          showToolbar={selectedNodeCount === 1}
         />
       ),
     }),
-    [deleteNode, updateNodeColor, updateNodeLabel],
+    [
+      copySelection,
+      deleteNode,
+      duplicateSelection,
+      selectedNodeCount,
+      updateNodeColor,
+      updateNodeLabel,
+    ],
   );
 
   const edgeTypes = useMemo(
