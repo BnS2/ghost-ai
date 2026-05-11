@@ -6,7 +6,7 @@
     "dev": "varlock run -- next dev",
     "build": "varlock run -- next build",
     "start": "varlock run -- next start",
-    "lint": "varlock run -- eslint",
+    "lint": "eslint",
     "db:generate": "varlock run -- prisma generate",
     "db:migrate": "varlock run -- prisma migrate dev",
     "db:studio": "varlock run -- prisma studio",
