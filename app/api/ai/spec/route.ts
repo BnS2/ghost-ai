@@ -39,6 +39,13 @@ export async function POST(req: Request) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
+    const projectDb = db as PrismaClient;
+    const projectSpec = await projectDb.projectSpec.create({
+      data: {
+        projectId: roomId,
+      },
+    });
+
     const handle = await tasks.trigger<typeof generateSpec>("generate-spec", {
       projectId: roomId,
       roomId,
@@ -47,18 +54,11 @@ export async function POST(req: Request) {
       edges: Array.isArray(edges) ? edges : [],
     });
 
-    const projectDb = db as PrismaClient;
     await projectDb.taskRun.create({
       data: {
         runId: handle.id,
         projectId: roomId,
         userId,
-      },
-    });
-
-    const projectSpec = await projectDb.projectSpec.create({
-      data: {
-        projectId: roomId,
       },
     });
 

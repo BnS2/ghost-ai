@@ -55,6 +55,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - (none — next feature unit pending)
 
 ## Completed (continued)
+- **Fixed autosave gate race condition**: The `setTimeout(() => setIsSavedCanvasChecked(false), 0)` in the project-switch reset effect (`canvas-flow.tsx:551`) could fire after the initialization effect had already set `isSavedCanvasChecked = true`, permanently re-locking the autosave gate. After manual save, subsequent canvas changes would not trigger the "Save" button because the `useCanvasAutosave` debounce effect exited at `if (!enabled) return`. Removed the `setTimeout` wrapper so the reset happens synchronously, letting the init effect's `true` value take precedence. Verified `npx tsc --noEmit` and `npx biome check` pass.
+
+## Completed (continued)
 - Spec UI Integration (feature-specs/29-spec-ui-integration.md). Created `GET /api/projects/[projectId]/specs` list endpoint and added `GET` spec content handler to `[specId]/route.ts`. Installed `react-markdown`. Created `components/editor/spec-preview-modal.tsx` with Markdown rendering, download action, and keyboard support. Replaced the static Specs tab in `ai-sidebar.tsx` with a dynamic spec list featuring loading/empty states, clickable items, and per-item download buttons.
 
 ## Completed (continued)
@@ -66,6 +69,21 @@ Update this file whenever the current phase, active feature, or implementation s
 - Created `trigger/index.ts` and `trigger/example.ts` with a `helloWorldTask`.
 - Added `TRIGGER_SECRET_KEY` to `.env.schema` and regenerated `env.d.ts`.
 - Verified `npx tsc --noEmit` and `npm run build` pass.
+
+## CodeRabbit Remediation (2026-05-11)
+- Validated and fixed 15 findings across 12 files from CodeRabbit review:
+  - **Security**: `app/api/ai/design/route.ts` — added server-side `roomId === projectId` check before `checkProjectAccess`.
+  - **Bug fixes**: `ai-sidebar.tsx` — re-entrant submit guards, invalid `<button>` nesting, unchecked PATCH response error handling. `canvas-flow.tsx` — grid auto-layout cumulative column/row sizing, `delete_node` now removes incident edges via `reactFlow.deleteElements`. `lib/ai-canvas-actions.ts` — prompt text now matches `canvasActionsResponseSchema` (object with `actions` array).
+  - **Trigger.dev hardening**: `trigger/design-agent.ts` and `trigger/generate-spec.ts` — added `queue.concurrencyLimit`, `retry.randomize`, `isFatalError`/`AbortTaskRunError` classification; replaced raw prompt logging with `promptLength`; made `generateSpec` payload fields optional with defaults.
+  - **Config**: `trigger.config.ts` — added `randomize: true` to default retries. `package.json` — pinned trigger CLI to `@4.4.5`. `.env.schema` — trailing newline, `PUBLIC_TOKEN_EXPIRATION` env var.
+  - **Infra/DB**: `prisma/models/task-run.prisma` — removed redundant `@@index([runId])` (duplicate of `@unique`). `types/tasks.ts` — replaced `AiStatusFeedPayload` interface with Zod schema, added `.max(256)` to sender, `.int().nonnegative()` to timestamp.
+  - **Streaming**: `spec download route` — streams blob directly instead of buffering. `spec/token/route.ts` — configurable token expiration.
+  - **Save button**: `editor-navbar.tsx` — made save button conditional on `projectName` so it doesn't render on `/editor` (project list page) where there's no active canvas to save.
+  - **Autosave UI fix**: Two-part fix:
+    - `hooks/use-canvas-autosave.ts` — replaced `JSON.stringify`-based snapshot comparison with `canvasFingerprint()` that reads node positions/labels and edge connections directly, avoiding unreliable proxy serialization. Removed the unused `serializeCanvas` helper.
+    - `components/editor/canvas-flow.tsx` — added a `useStore` subscription from `@xyflow/react` that builds a position/edge hash from React Flow's internal state. This forces a re-render on every node position or edge change, even when `useLiveblocksFlow` returns a stable LiveList proxy reference. Without this, `canvasFingerprint` was never recomputed after node moves because the component never re-rendered.
+    The save pill now correctly shows "Save" → "Saving" → "Saved" transitions after node moves.
+- Skipped: TaskRun model relations (no `User` model in schema), runtime validation for `AiStatusFeedPayload` (not parsed), design route hardcoded token (same pattern, not called out). All fixes pass `tsc --noEmit` and `eslint`.
 
 ## Open Questions
 - (none)

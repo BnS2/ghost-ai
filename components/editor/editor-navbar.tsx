@@ -79,21 +79,23 @@ export function EditorNavbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          aria-label={`Canvas ${saveStatusLabel.toLowerCase()}`}
-          aria-live="polite"
-          onClick={onSave}
-          type="button"
-          className={cn(
-            "h-8 gap-2 px-4 rounded-full bg-surface/50 border border-border-subtle text-text-secondary flex items-center cursor-pointer hover:bg-surface transition-colors",
-            saveStatus === "saved" && "text-state-success",
-            saveStatus === "saving" && "text-text-muted",
-            saveStatus === "error" && "text-state-error",
-          )}
-        >
-          <SaveIcon className="h-4 w-4" />
-          <span className="hidden text-xs font-bold sm:inline">{saveStatusLabel}</span>
-        </button>
+        {projectName && (
+          <button
+            aria-label={`Canvas ${saveStatusLabel.toLowerCase()}`}
+            aria-live="polite"
+            onClick={onSave}
+            type="button"
+            className={cn(
+              "h-8 gap-2 px-4 rounded-full bg-surface/50 border border-border-subtle text-text-secondary flex items-center cursor-pointer hover:bg-surface transition-colors",
+              saveStatus === "saved" && "text-state-success",
+              saveStatus === "saving" && "text-text-muted",
+              saveStatus === "error" && "text-state-error",
+            )}
+          >
+            <SaveIcon className="h-4 w-4" />
+            <span className="hidden text-xs font-bold sm:inline">{saveStatusLabel}</span>
+          </button>
+        )}
         {onOpenTemplates && (
           <Button
             variant="outline"

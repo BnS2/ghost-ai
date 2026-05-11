@@ -11,7 +11,7 @@
     "db:migrate": "varlock run -- prisma migrate dev",
     "db:studio": "varlock run -- prisma studio",
     "prepare": "simple-git-hooks",
-    "trigger:dev": "varlock run -- npx trigger.dev dev"
+    "trigger:dev": "varlock run -- npx trigger.dev@4.4.5 dev"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"

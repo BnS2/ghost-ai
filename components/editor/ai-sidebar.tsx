@@ -71,6 +71,8 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
   const [specId, setSpecId] = useState<string | null>(null);
   const [specSendError, setSpecSendError] = useState<string | null>(null);
   const specCompletionHandledRef = useRef(false);
+  const submitPendingRef = useRef(false);
+  const specSubmitPendingRef = useRef(false);
 
   const [specs, setSpecs] = useState<SpecItem[]>([]);
   const [specsLoading, setSpecsLoading] = useState(false);
@@ -220,7 +222,10 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: specRun.output.spec }),
       })
-        .then(async () => {
+        .then(async (patchRes) => {
+          if (!patchRes.ok) {
+            throw new Error(`Save failed (${patchRes.status})`);
+          }
           return fetch(`/api/projects/${projectId}/specs`);
         })
         .then(async (res) => {
@@ -237,7 +242,9 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
             }
           }
         })
-        .catch(() => {})
+        .catch(() => {
+          setSpecSendError("Failed to save the generated spec. Please try again.");
+        })
         .finally(() => {
           setSpecRunId(null);
           setSpecPublicToken(null);
@@ -275,9 +282,11 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
   const submitPrompt = useCallback(async () => {
     const trimmedPrompt = prompt.trim();
 
-    if (!trimmedPrompt || !user || isGenerating) {
+    if (!trimmedPrompt || !user || isGenerating || submitPendingRef.current) {
       return;
     }
+
+    submitPendingRef.current = true;
 
     const sender = user.fullName ?? user.primaryEmailAddress?.emailAddress ?? "Unknown";
 
@@ -334,6 +343,7 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
 
       setRunId(responseRunId);
       setPublicToken(responseToken);
+      submitPendingRef.current = false;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to send message.";
 
@@ -345,13 +355,17 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
       }).catch(() => {
         setSendError(errorMessage);
       });
+
+      submitPendingRef.current = false;
     }
   }, [prompt, user, isGenerating, createFeedMessage, projectId]);
 
   const handleGenerateSpec = useCallback(async () => {
-    if (!user || isSpecGenerating) {
+    if (!user || isSpecGenerating || specSubmitPendingRef.current) {
       return;
     }
+
+    specSubmitPendingRef.current = true;
 
     try {
       setSpecSendError(null);
@@ -428,10 +442,12 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
       setSpecRunId(responseRunId);
       setSpecPublicToken(token);
       setSpecId(responseSpecId);
+      specSubmitPendingRef.current = false;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to generate spec.";
       setSpecSendError(errorMessage);
       setTimeout(() => setSpecSendError(null), 5000);
+      specSubmitPendingRef.current = false;
     }
   }, [user, isSpecGenerating, projectId, reactFlow, feedMessages]);
 
@@ -682,12 +698,21 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
                   const filename = `spec-${spec.id}.md`;
 
                   return (
-                    <button
+                    // biome-ignore lint/a11y/useSemanticElements: nested interactive elements require role=button
+                    <div
                       key={spec.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => {
                         setSelectedSpecId(spec.id);
                         setPreviewOpen(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedSpecId(spec.id);
+                          setPreviewOpen(true);
+                        }
                       }}
                       className="flex items-center gap-3 rounded-xl border border-surface-border bg-elevated/60 p-3 text-left transition-colors hover:bg-elevated focus-visible:outline-2 focus-visible:outline-accent-primary"
                     >
@@ -720,7 +745,7 @@ export function AiSidebar({ isOpen, onClose, projectId }: AiSidebarProps) {
                       >
                         <DownloadIcon className="h-3.5 w-3.5" />
                       </Button>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

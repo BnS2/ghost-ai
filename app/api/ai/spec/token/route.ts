@@ -3,6 +3,8 @@ import { auth as triggerAuth } from "@trigger.dev/sdk";
 import { NextResponse } from "next/server";
 import { db, type PrismaClient } from "@/lib/prisma";
 
+const PUBLIC_TOKEN_EXPIRATION = process.env.PUBLIC_TOKEN_EXPIRATION || "1h";
+
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) {
@@ -46,7 +48,7 @@ export async function POST(req: Request) {
           runs: [runId],
         },
       },
-      expirationTime: "1h",
+      expirationTime: PUBLIC_TOKEN_EXPIRATION,
     });
 
     return NextResponse.json({ token: publicToken });

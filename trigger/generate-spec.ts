@@ -1,16 +1,39 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { logger, metadata, task } from "@trigger.dev/sdk";
+import { AbortTaskRunError, logger, metadata, task } from "@trigger.dev/sdk";
 import { generateText } from "ai";
 import { z } from "zod";
 
 const google = createGoogleGenerativeAI();
 
+function isFatalError(error: unknown): boolean {
+  if (error instanceof Error) {
+    if (
+      error.name === "AI_APICallError" ||
+      error.name === "AI_InvalidResponseDataError" ||
+      error.name === "AI_InvalidArgumentError" ||
+      error.name === "AbortTaskRunError"
+    ) {
+      return true;
+    }
+    const msg = error.message.toLowerCase();
+    if (
+      msg.includes("invalid api key") ||
+      msg.includes("authentication") ||
+      msg.includes("unauthorized") ||
+      msg.includes("invalid argument")
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const payloadSchema = z.object({
   projectId: z.string().min(1),
   roomId: z.string().min(1),
-  chatHistory: z.array(z.unknown()),
-  nodes: z.array(z.unknown()),
-  edges: z.array(z.unknown()),
+  chatHistory: z.array(z.unknown()).optional().default([]),
+  nodes: z.array(z.unknown()).optional().default([]),
+  edges: z.array(z.unknown()).optional().default([]),
 });
 
 function formatCanvasForPrompt(nodes: unknown[], edges: unknown[]): string {
@@ -102,11 +125,15 @@ Generate a single Markdown document with the following sections:
 
 export const generateSpec = task({
   id: "generate-spec",
+  queue: {
+    concurrencyLimit: 3,
+  },
   retry: {
     maxAttempts: 3,
     factor: 1.8,
     minTimeoutInMs: 1000,
     maxTimeoutInMs: 30000,
+    randomize: true,
   },
   run: async (payload: {
     projectId: string;
@@ -173,6 +200,10 @@ Return only the Markdown specification document.`;
       logger.error("Spec generation task failed", { error: message });
 
       metadata.set("status", "error").set("message", `Generation failed: ${message}`);
+
+      if (isFatalError(error)) {
+        throw new AbortTaskRunError(message);
+      }
 
       throw error;
     }

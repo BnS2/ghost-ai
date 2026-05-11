@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { logger, task } from "@trigger.dev/sdk";
+import { AbortTaskRunError, logger, task } from "@trigger.dev/sdk";
 import { generateObject } from "ai";
 import {
   buildPrompt,
@@ -11,13 +11,40 @@ import type { canvasEdge, canvasNode } from "@/types/canvas";
 
 const google = createGoogleGenerativeAI();
 
+function isFatalError(error: unknown): boolean {
+  if (error instanceof Error) {
+    if (
+      error.name === "AI_APICallError" ||
+      error.name === "AI_InvalidResponseDataError" ||
+      error.name === "AI_InvalidArgumentError" ||
+      error.name === "AbortTaskRunError"
+    ) {
+      return true;
+    }
+    const msg = error.message.toLowerCase();
+    if (
+      msg.includes("invalid api key") ||
+      msg.includes("authentication") ||
+      msg.includes("unauthorized") ||
+      msg.includes("invalid argument")
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export const designAgentTask = task({
   id: "design-agent",
+  queue: {
+    concurrencyLimit: 3,
+  },
   retry: {
     maxAttempts: 3,
     factor: 1.8,
     minTimeoutInMs: 1000,
     maxTimeoutInMs: 30000,
+    randomize: true,
   },
   run: async (payload: {
     prompt: string;
@@ -29,7 +56,7 @@ export const designAgentTask = task({
   }) => {
     const { prompt, roomId, currentCanvas } = payload;
 
-    logger.info("Design agent task started", { prompt, roomId });
+    logger.info("Design agent task started", { promptLength: prompt.length, roomId });
 
     await liveblocks.broadcastEvent(roomId, {
       type: "AI_STATUS",
@@ -54,7 +81,7 @@ export const designAgentTask = task({
 
       const userPrompt = buildPrompt(prompt, canvasContext);
 
-      logger.info("Calling Gemini with prompt", { userPrompt: userPrompt.slice(0, 200) });
+      logger.info("Calling Gemini with prompt", { promptLength: userPrompt.length, roomId });
 
       const { object } = await generateObject({
         model: google("gemini-2.5-flash"),
@@ -105,6 +132,10 @@ export const designAgentTask = task({
         message: `Generation failed: ${message}`,
         status: "error",
       });
+
+      if (isFatalError(error)) {
+        throw new AbortTaskRunError(message);
+      }
 
       throw error;
     }

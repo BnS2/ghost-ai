@@ -128,7 +128,7 @@ export function buildPrompt(
   currentCanvas?: { nodes: canvasNode[]; edges: canvasEdge[] },
 ): string {
   if (!currentCanvas || (currentCanvas.nodes.length === 0 && currentCanvas.edges.length === 0)) {
-    return `Generate a system architecture for: "${userPrompt}". Return a JSON array of canvas actions. Use add_node and add_edge actions to build the complete design.`;
+    return `Generate a system architecture for: "${userPrompt}". Return a JSON object with an "actions" array of canvas actions, e.g. {"actions": [...]}. Use add_node and add_edge actions to build the complete design.`;
   }
 
   const nodeDescriptions = currentCanvas.nodes
@@ -153,7 +153,7 @@ ${edgeDescriptions || "(none)"}
 
 User request: "${userPrompt}"
 
-Return a JSON array of canvas actions to fulfill this request. You may add, move, update, or delete nodes and edges. If the request asks to modify existing elements, reference them by their existing IDs.`;
+Return a JSON object with an "actions" array of canvas actions to fulfill this request, e.g. {"actions": [...]}. You may add, move, update, or delete nodes and edges. If the request asks to modify existing elements, reference them by their existing IDs.`;
 }
 
 export const SYSTEM_PROMPT_TEXT = SYSTEM_PROMPT;

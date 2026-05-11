@@ -27,6 +27,7 @@ import {
   SelectionMode,
   useNodesInitialized,
   useReactFlow,
+  useStore,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { BotIcon, Loader2Icon } from "lucide-react";
@@ -179,6 +180,18 @@ export function CanvasFlow({
 
   const reactFlow = useReactFlow<canvasNode, canvasEdge>();
   const isInitialized = useNodesInitialized();
+
+  useStore((state) => {
+    let hash = "";
+    for (const n of state.nodes) {
+      hash += `|${n.id}:${Math.round(n.position.x)},${Math.round(n.position.y)}`;
+    }
+    for (const e of state.edges) {
+      hash += `|${e.id}:${e.source}->${e.target}`;
+    }
+    return hash;
+  });
+
   const nodeIdCounter = useRef(0);
   const edgeIdCounter = useRef(0);
   const nodesRef = useRef(nodes);
@@ -456,7 +469,7 @@ export function CanvasFlow({
           break;
         }
         case "delete_node": {
-          onNodesChange([{ id: action.nodeId, type: "remove" }]);
+          void reactFlow.deleteElements({ nodes: [{ id: action.nodeId }] });
           break;
         }
         case "delete_edge": {
@@ -465,7 +478,7 @@ export function CanvasFlow({
         }
       }
     },
-    [onEdgesChange, onNodesChange],
+    [onEdgesChange, onNodesChange, reactFlow],
   );
 
   useEventListener(({ event }) => {
@@ -535,11 +548,11 @@ export function CanvasFlow({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: must reset when projectId changes
   useEffect(() => {
-    const id = setTimeout(() => setIsSavedCanvasChecked(false), 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: synchronous reset removes the setTimeout race condition
+    setIsSavedCanvasChecked(false);
     savedCanvasCheckStartedRef.current = false;
     lastTemplateImportIdRef.current = null;
     fitViewAppliedRef.current = null;
-    return () => clearTimeout(id);
   }, [projectId]);
 
   useEffect(() => {
@@ -759,26 +772,37 @@ export function CanvasFlow({
     const originX = sorted[0].position.x;
     const originY = sorted[0].position.y;
 
+    const numCols = Math.min(maxCols, sorted.length);
+    const numRows = Math.ceil(sorted.length / maxCols);
+
+    const columnWidths: number[] = Array.from({ length: numCols }, () => 0);
+    const rowHeights: number[] = Array.from({ length: numRows }, () => 0);
+
+    for (let i = 0; i < sorted.length; i++) {
+      const col = i % maxCols;
+      const row = Math.floor(i / maxCols);
+      const w: number = Number(sorted[i].style?.width) || 180;
+      const h: number = Number(sorted[i].style?.height) || 72;
+      columnWidths[col] = Math.max(columnWidths[col], w);
+      rowHeights[row] = Math.max(rowHeights[row], h);
+    }
+
+    const colStartX: number[] = [0];
+    for (let c = 1; c < numCols; c++) {
+      colStartX.push(colStartX[c - 1] + columnWidths[c - 1] + hGap);
+    }
+
+    const rowStartY: number[] = [0];
+    for (let r = 1; r < numRows; r++) {
+      rowStartY.push(rowStartY[r - 1] + rowHeights[r - 1] + vGap);
+    }
+
     const changes = sorted.map((node, index) => {
       const col = index % maxCols;
       const row = Math.floor(index / maxCols);
 
-      const maxWidthInCol = sorted
-        .filter((_, i) => i % maxCols === col)
-        .reduce((max, n) => {
-          const w = typeof n.style?.width === "number" ? n.style.width : 180;
-          return Math.max(max, w);
-        }, 0);
-
-      const colX = originX + col * (maxWidthInCol + hGap);
-      const maxHeightInRow = sorted
-        .filter((_, i) => Math.floor(i / maxCols) === row)
-        .reduce((max, n) => {
-          const h = typeof n.style?.height === "number" ? n.style.height : 72;
-          return Math.max(max, h);
-        }, 0);
-
-      const rowY = originY + row * (maxHeightInRow + vGap);
+      const colX = originX + colStartX[col];
+      const rowY = originY + rowStartY[row];
 
       return {
         id: node.id,

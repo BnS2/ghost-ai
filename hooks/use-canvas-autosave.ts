@@ -8,8 +8,17 @@ export type CanvasSaveStatus = "idle" | "saving" | "saved" | "error";
 
 const AUTOSAVE_DEBOUNCE_MS = 2000;
 
-function serializeCanvas(nodes: canvasNode[], edges: canvasEdge[]) {
-  return JSON.stringify({ edges, nodes });
+function canvasFingerprint(nodes: canvasNode[], edges: canvasEdge[]): string {
+  const parts: string[] = [];
+  for (const n of nodes) {
+    parts.push(`${n.id}:${Math.round(n.position.x)},${Math.round(n.position.y)}`);
+    if (n.data?.label !== undefined) parts.push(`l:${n.data.label}`);
+  }
+  for (const e of edges) {
+    parts.push(`${e.id}:${e.source}->${e.target}`);
+  }
+  parts.sort();
+  return parts.join("|");
 }
 
 function isEmptyCanvas(nodes: canvasNode[], edges: canvasEdge[]) {
@@ -29,10 +38,10 @@ export function useCanvasAutosave(
   const [status, setStatus] = useState<CanvasSaveStatus>("idle");
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
-  const lastPersistedSnapshotRef = useRef<string | null>(null);
+  const lastPersistedFingerprintRef = useRef<string | null>(null);
   const nodesRef = useRef(nodes);
   const edgesRef = useRef(edges);
-  const latestSnapshot = serializeCanvas(nodes, edges);
+  const currentFingerprint = canvasFingerprint(nodes, edges);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -51,7 +60,7 @@ export function useCanvasAutosave(
     const snapshotEdges = edgesRef.current;
 
     if (isEmptyCanvas(snapshotNodes, snapshotEdges)) {
-      lastPersistedSnapshotRef.current = serializeCanvas(snapshotNodes, snapshotEdges);
+      lastPersistedFingerprintRef.current = canvasFingerprint(snapshotNodes, snapshotEdges);
       setStatus("saved");
       return;
     }
@@ -75,7 +84,7 @@ export function useCanvasAutosave(
           throw new Error(`Canvas save failed with ${response.status}`);
         }
 
-        lastPersistedSnapshotRef.current = serializeCanvas(snapshotNodes, snapshotEdges);
+        lastPersistedFingerprintRef.current = canvasFingerprint(snapshotNodes, snapshotEdges);
         setStatus("saved");
       })
       .catch((error: unknown) => {
@@ -93,13 +102,13 @@ export function useCanvasAutosave(
       return;
     }
 
-    if (lastPersistedSnapshotRef.current === null) {
+    if (lastPersistedFingerprintRef.current === null) {
       if (isEmptyCanvas(nodes, edges)) {
-        lastPersistedSnapshotRef.current = latestSnapshot;
+        lastPersistedFingerprintRef.current = currentFingerprint;
         const id = setTimeout(() => setStatus("saved"), 0);
         return () => clearTimeout(id);
       }
-    } else if (latestSnapshot === lastPersistedSnapshotRef.current) {
+    } else if (currentFingerprint === lastPersistedFingerprintRef.current) {
       return;
     }
 
@@ -116,7 +125,7 @@ export function useCanvasAutosave(
         debounceTimerRef.current = null;
       }
     };
-  }, [edges, enabled, latestSnapshot, nodes, save]);
+  }, [currentFingerprint, enabled, nodes, edges, save]);
 
   useEffect(() => {
     return () => {

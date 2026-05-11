@@ -55,10 +55,7 @@ export async function GET(
       return new NextResponse("Spec content not found", { status: 404 });
     }
 
-    const response = new Response(result.stream);
-    const text = await response.text();
-
-    return new NextResponse(text, {
+    return new NextResponse(result.stream as ReadableStream, {
       headers: {
         "Content-Type": "text/markdown; charset=utf-8",
         "Content-Disposition": `attachment; filename="spec-${specId}.md"`,

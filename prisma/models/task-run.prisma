@@ -5,6 +5,5 @@ model TaskRun {
   userId    String
   createdAt DateTime @default(now())
 
-  @@index([runId])
   @@index([userId, projectId])
 }

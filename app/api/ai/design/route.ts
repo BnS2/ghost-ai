@@ -35,6 +35,10 @@ export async function POST(req: Request) {
       return new NextResponse("prompt is required", { status: 400 });
     }
 
+    if (roomId !== projectId) {
+      return new NextResponse("roomId must match projectId", { status: 403 });
+    }
+
     const hasAccess = await checkProjectAccess(projectId);
     if (!hasAccess) {
       return new NextResponse("Forbidden", { status: 403 });
