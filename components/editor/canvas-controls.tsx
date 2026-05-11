@@ -2,18 +2,20 @@
 
 import type { Edge, Node, ReactFlowInstance } from "@xyflow/react";
 import type { LucideIcon } from "lucide-react";
-import { Maximize2, Minus, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
+import { LayoutGrid, Maximize2, Minus, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
 
 const VIEWPORT_ANIMATION_MS = 180;
 
 interface CanvasControlsProps<NodeType extends Node, EdgeType extends Edge> {
   canRedo: boolean;
   canUndo: boolean;
+  onAutoSpace: () => void;
   onDeleteSelected: () => void;
   onRedo: () => void;
   onUndo: () => void;
   reactFlow: ReactFlowInstance<NodeType, EdgeType>;
   selectedCount: number;
+  selectedNodeCount: number;
 }
 
 interface ControlButtonProps {
@@ -41,13 +43,16 @@ function ControlButton({ disabled = false, icon: Icon, label, onClick }: Control
 export function CanvasControls<NodeType extends Node, EdgeType extends Edge>({
   canRedo,
   canUndo,
+  onAutoSpace,
   onDeleteSelected,
   onRedo,
   onUndo,
   reactFlow,
   selectedCount,
+  selectedNodeCount,
 }: CanvasControlsProps<NodeType, EdgeType>) {
   const hasSelection = selectedCount > 0;
+  const hasMultiNodeSelection = selectedNodeCount >= 2;
 
   return (
     <div
@@ -84,6 +89,12 @@ export function CanvasControls<NodeType extends Node, EdgeType extends Edge>({
       {hasSelection && (
         <>
           <div aria-hidden="true" className="h-6 w-px bg-border-subtle" />
+          {hasMultiNodeSelection && (
+            <>
+              <ControlButton icon={LayoutGrid} label="Auto-space selection" onClick={onAutoSpace} />
+              <div aria-hidden="true" className="h-6 w-px bg-border-subtle" />
+            </>
+          )}
           <button
             type="button"
             aria-label={`Delete ${selectedCount} selected elements`}

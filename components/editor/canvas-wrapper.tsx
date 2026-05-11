@@ -4,6 +4,7 @@ import { ClientSideSuspense, LiveblocksProvider, RoomProvider } from "@liveblock
 import { ReactFlowProvider } from "@xyflow/react";
 import type React from "react";
 import { Component, type ReactNode, useCallback, useState } from "react";
+import { AiSidebar } from "@/components/editor/ai-sidebar";
 import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { CanvasFlow } from "./canvas-flow";
 import { NodeShape } from "./node-shape";
@@ -33,6 +34,8 @@ class ErrorBoundary extends Component<
 }
 
 interface CanvasWrapperProps {
+  aiSidebarOpen: boolean;
+  onAiSidebarClose: () => void;
   onSaveStatusChange?: (status: CanvasSaveStatus) => void;
   projectId: string;
   saveRef?: React.MutableRefObject<(() => void) | null>;
@@ -44,6 +47,8 @@ interface CanvasWrapperProps {
 }
 
 export function CanvasWrapper({
+  aiSidebarOpen,
+  onAiSidebarClose,
   onSaveStatusChange,
   projectId,
   saveRef,
@@ -120,6 +125,11 @@ export function CanvasWrapper({
                     <NodeShape preview shape={shapePreview.shape} />
                   </div>
                 ) : null}
+                <AiSidebar
+                  isOpen={aiSidebarOpen}
+                  onClose={onAiSidebarClose}
+                  projectId={projectId}
+                />
               </div>
             </ReactFlowProvider>
           </ClientSideSuspense>

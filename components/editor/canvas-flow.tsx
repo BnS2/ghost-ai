@@ -3,6 +3,7 @@
 import {
   useCanRedo,
   useCanUndo,
+  useEventListener,
   useRedo,
   useUndo,
   useUpdateMyPresence,
@@ -26,12 +27,15 @@ import {
   SelectionMode,
   useNodesInitialized,
   useReactFlow,
+  useStore,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { BotIcon, Loader2Icon } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type CanvasSaveStatus, useCanvasAutosave } from "@/hooks/use-canvas-autosave";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { type CanvasAction, enforceNodeSpacing } from "@/lib/ai-canvas-actions";
 import { parseCanvasSnapshot } from "@/lib/canvas-snapshot";
 import {
   type CanvasShapeDragPayload,
@@ -176,6 +180,18 @@ export function CanvasFlow({
 
   const reactFlow = useReactFlow<canvasNode, canvasEdge>();
   const isInitialized = useNodesInitialized();
+
+  useStore((state) => {
+    let hash = "";
+    for (const n of state.nodes) {
+      hash += `|${n.id}:${Math.round(n.position.x)},${Math.round(n.position.y)}`;
+    }
+    for (const e of state.edges) {
+      hash += `|${e.id}:${e.source}->${e.target}`;
+    }
+    return hash;
+  });
+
   const nodeIdCounter = useRef(0);
   const edgeIdCounter = useRef(0);
   const nodesRef = useRef(nodes);
@@ -184,9 +200,15 @@ export function CanvasFlow({
   const [selectedElementCount, setSelectedElementCount] = useState(0);
   const [selectedNodeCount, setSelectedNodeCount] = useState(0);
   const [isSavedCanvasChecked, setIsSavedCanvasChecked] = useState(false);
+  const [aiStatus, setAiStatus] = useState<{
+    message: string;
+    status: string;
+    visible: boolean;
+  } | null>(null);
   const lastTemplateImportIdRef = useRef<number | null>(null);
   const fitViewAppliedRef = useRef<number | null>(null);
   const savedCanvasCheckStartedRef = useRef(false);
+  const aiFitViewPendingRef = useRef(false);
   const { save, status: saveStatus } = useCanvasAutosave(projectId, nodes, edges, {
     enabled: isSavedCanvasChecked,
   });
@@ -343,6 +365,172 @@ export function CanvasFlow({
     edgesRef.current = edges;
   }, [edges]);
 
+  const applyAiAction = useCallback(
+    (action: CanvasAction) => {
+      switch (action.type) {
+        case "add_node": {
+          const node: canvasNode = {
+            id: action.id,
+            type: "custom",
+            position: { x: action.x, y: action.y },
+            data: {
+              label: action.label,
+              color: action.color,
+              textColor: action.textColor,
+              shape: action.shape,
+            },
+            style: {
+              width: action.width,
+              height: action.height,
+            },
+          };
+
+          onNodesChange([{ type: "add", item: node }]);
+          break;
+        }
+        case "add_edge": {
+          const edge: canvasEdge = {
+            id: action.id,
+            type: "canvas",
+            source: action.source,
+            target: action.target,
+            data: {
+              label: action.label ?? "",
+            },
+            interactionWidth: 24,
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: "var(--text-secondary)",
+              width: 16,
+              height: 16,
+            },
+            style: {
+              stroke: "var(--text-secondary)",
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+              strokeWidth: 1.6,
+            },
+          };
+
+          onEdgesChange([{ type: "add", item: edge }]);
+          break;
+        }
+        case "move_node": {
+          const existingNode = nodesRef.current.find((n) => n.id === action.nodeId);
+
+          if (!existingNode) {
+            break;
+          }
+
+          onNodesChange([
+            {
+              id: action.nodeId,
+              item: {
+                ...existingNode,
+                position: { x: action.x, y: action.y },
+              },
+              type: "replace",
+            },
+          ]);
+          break;
+        }
+        case "update_node": {
+          const existingNode = nodesRef.current.find((n) => n.id === action.nodeId);
+
+          if (!existingNode) {
+            break;
+          }
+
+          const nextData = {
+            ...existingNode.data,
+            ...(action.label !== undefined ? { label: action.label } : {}),
+            ...(action.color !== undefined ? { color: action.color } : {}),
+            ...(action.textColor !== undefined ? { textColor: action.textColor } : {}),
+            ...(action.shape !== undefined ? { shape: action.shape } : {}),
+          };
+
+          const nextStyle = {
+            ...existingNode.style,
+            ...(action.width !== undefined ? { width: action.width } : {}),
+            ...(action.height !== undefined ? { height: action.height } : {}),
+          };
+
+          onNodesChange([
+            {
+              id: action.nodeId,
+              item: {
+                ...existingNode,
+                data: nextData,
+                style: nextStyle,
+              },
+              type: "replace",
+            },
+          ]);
+          break;
+        }
+        case "delete_node": {
+          void reactFlow.deleteElements({ nodes: [{ id: action.nodeId }] });
+          break;
+        }
+        case "delete_edge": {
+          onEdgesChange([{ id: action.edgeId, type: "remove" }]);
+          break;
+        }
+      }
+    },
+    [onEdgesChange, onNodesChange, reactFlow],
+  );
+
+  useEventListener(({ event }) => {
+    if (event.type === "AI_STATUS") {
+      setAiStatus({
+        message: event.message,
+        status: event.status,
+        visible: true,
+      });
+
+      if (event.status === "completed") {
+        aiFitViewPendingRef.current = true;
+      }
+
+      if (event.status === "completed" || event.status === "error") {
+        setTimeout(() => {
+          setAiStatus((prev) =>
+            prev?.status === event.status ? { ...prev, visible: false } : prev,
+          );
+        }, 6000);
+      }
+    }
+
+    if (event.type === "AI_ACTIONS") {
+      setAiStatus((prev) =>
+        prev
+          ? {
+              ...prev,
+              message: `Applying ${event.actions.length} design action${event.actions.length === 1 ? "" : "s"}...`,
+              status: "processing",
+              visible: true,
+            }
+          : null,
+      );
+
+      const existingRects = nodesRef.current.map((n) => ({
+        x: n.position.x,
+        y: n.position.y,
+        width: typeof n.style?.width === "number" ? n.style.width : 180,
+        height: typeof n.style?.height === "number" ? n.style.height : 72,
+      }));
+
+      const spacedActions = enforceNodeSpacing(event.actions, existingRects);
+
+      for (const action of spacedActions) {
+        applyAiAction(action);
+      }
+
+      aiFitViewPendingRef.current = true;
+    }
+  });
+
   useEffect(() => {
     onSaveStatusChange?.(saveStatus);
   }, [onSaveStatusChange, saveStatus]);
@@ -360,11 +548,11 @@ export function CanvasFlow({
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: must reset when projectId changes
   useEffect(() => {
-    const id = setTimeout(() => setIsSavedCanvasChecked(false), 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: synchronous reset removes the setTimeout race condition
+    setIsSavedCanvasChecked(false);
     savedCanvasCheckStartedRef.current = false;
     lastTemplateImportIdRef.current = null;
     fitViewAppliedRef.current = null;
-    return () => clearTimeout(id);
   }, [projectId]);
 
   useEffect(() => {
@@ -483,6 +671,17 @@ export function CanvasFlow({
     onTemplateImported?.();
   }, [isInitialized, nodes, onTemplateImported, reactFlow, templateImport]);
 
+  useEffect(() => {
+    if (!aiFitViewPendingRef.current || !isInitialized || nodes.length === 0) {
+      return;
+    }
+
+    aiFitViewPendingRef.current = false;
+    requestAnimationFrame(() => {
+      void reactFlow.fitView({ duration: 260, padding: 0.22 });
+    });
+  }, [isInitialized, nodes, reactFlow]);
+
   const updateNodeLabel = useCallback(
     (nodeId: string, label: string) => {
       const node = nodesRef.current.find((currentNode) => currentNode.id === nodeId);
@@ -554,6 +753,66 @@ export function CanvasFlow({
       edges: selectedEdges,
     });
   }, [reactFlow]);
+
+  const autoSpaceSelection = useCallback(() => {
+    const selectedNodes = reactFlow.getNodes().filter((n) => n.selected);
+
+    if (selectedNodes.length < 2) return;
+
+    const maxCols = 4;
+    const hGap = 200;
+    const vGap = 150;
+
+    const sorted = [...selectedNodes].sort((a, b) => {
+      const dy = a.position.y - b.position.y;
+      if (Math.abs(dy) > 80) return dy;
+      return a.position.x - b.position.x;
+    });
+
+    const originX = sorted[0].position.x;
+    const originY = sorted[0].position.y;
+
+    const numCols = Math.min(maxCols, sorted.length);
+    const numRows = Math.ceil(sorted.length / maxCols);
+
+    const columnWidths: number[] = Array.from({ length: numCols }, () => 0);
+    const rowHeights: number[] = Array.from({ length: numRows }, () => 0);
+
+    for (let i = 0; i < sorted.length; i++) {
+      const col = i % maxCols;
+      const row = Math.floor(i / maxCols);
+      const w: number = Number(sorted[i].style?.width) || 180;
+      const h: number = Number(sorted[i].style?.height) || 72;
+      columnWidths[col] = Math.max(columnWidths[col], w);
+      rowHeights[row] = Math.max(rowHeights[row], h);
+    }
+
+    const colStartX: number[] = [0];
+    for (let c = 1; c < numCols; c++) {
+      colStartX.push(colStartX[c - 1] + columnWidths[c - 1] + hGap);
+    }
+
+    const rowStartY: number[] = [0];
+    for (let r = 1; r < numRows; r++) {
+      rowStartY.push(rowStartY[r - 1] + rowHeights[r - 1] + vGap);
+    }
+
+    const changes = sorted.map((node, index) => {
+      const col = index % maxCols;
+      const row = Math.floor(index / maxCols);
+
+      const colX = originX + colStartX[col];
+      const rowY = originY + rowStartY[row];
+
+      return {
+        id: node.id,
+        item: { ...node, position: { x: colX, y: rowY } },
+        type: "replace" as const,
+      };
+    });
+
+    onNodesChange(changes);
+  }, [onNodesChange, reactFlow]);
 
   const updateSelectionCount = useCallback(
     ({
@@ -735,6 +994,24 @@ export function CanvasFlow({
       onMouseLeave={clearCursorPresence}
       role="application"
     >
+      {aiStatus?.visible ? (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute left-1/2 top-3 z-40 -translate-x-1/2"
+        >
+          <div className="flex items-center gap-2.5 rounded-2xl border border-accent-primary/30 bg-surface/90 px-4 py-2.5 text-sm text-text-primary shadow-2xl backdrop-blur-lg">
+            {aiStatus.status === "error" ? (
+              <BotIcon aria-hidden="true" className="h-4 w-4 shrink-0 text-destructive" />
+            ) : (
+              <Loader2Icon
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 animate-spin text-accent-primary"
+              />
+            )}
+            <span className="max-w-[340px] truncate">{aiStatus.message}</span>
+          </div>
+        </div>
+      ) : null}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -778,11 +1055,13 @@ export function CanvasFlow({
         <CanvasControls
           canRedo={canRedo}
           canUndo={canUndo}
+          onAutoSpace={autoSpaceSelection}
           onDeleteSelected={deleteSelectedElements}
           onRedo={handleRedo}
           onUndo={handleUndo}
           reactFlow={reactFlow}
           selectedCount={selectedElementCount}
+          selectedNodeCount={selectedNodeCount}
         />
       </ReactFlow>
     </div>

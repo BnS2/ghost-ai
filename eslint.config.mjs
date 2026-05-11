@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // Custom ignores:
     "env.d.ts",
     "app/generated/**",
+    ".trigger/**",
   ]),
 ]);
 
